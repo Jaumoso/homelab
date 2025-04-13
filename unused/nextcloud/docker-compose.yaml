@@ -1,0 +1,54 @@
+services:
+  db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    container_name: nextcloud_db
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - /mnt/externaldisk0/nextcloud/nextcloud_database:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=l.LfoUIOt5zanM_E9povgBP;
+      - MYSQL_PASSWORD=4q(Dy~lzUJ,TW9v-8(9@s=~Q#
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud_root_user
+      - PUID=1000
+      - PGID=1000
+    networks:
+      - dockerproxy
+      - nextcloud
+
+  redis:
+    image: redis
+    restart: unless-stopped
+    command: redis-server --requirepass T18w8xtXRB31bck7ZqpLg8gjp9HLa
+    networks:
+      - nextcloud
+
+  app:
+    image: nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - 8088:80
+    links:
+      - db
+      - redis
+    volumes:
+      - /mnt/externaldisk0/nextcloud/data:/var/www/html
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - MYSQL_PASSWORD=4q(Dy~lzUJ,TW9v-8(9@s=~Q#
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud_root_user
+      - MYSQL_HOST=db
+      - REDIS_HOST_PASSWORD=T18w8xtXRB31bck7ZqpLg8gjp9HLa
+      - PUID=1000
+      - PGID=1000
+    networks:
+      - dockerproxy
+      - nextcloud
+
+networks:
+  dockerproxy:
+    external: true
+  nextcloud:

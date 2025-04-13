@@ -1,0 +1,17 @@
+services:
+  web:
+    container_name: cloudcommander
+    ports:
+      - 9993:8000
+    volumes:
+      - ~:/root
+      - /:/mnt/fs
+    image: coderaiser/cloudcmd
+    environment:
+      CLOUDCMD_AUTH: true
+      CLOUDCMD_USERNAME: ${CLOUDCMD_USERNAME}
+      CLOUDCMD_PASSWORD: ${CLOUDCMD_PASSWORD}
+      CLOUDCMD_NAME: Homelab - CloudCommander
+      CLOUDCMD_CONTACT: false
+    restart: unless-stopped
+networks: {}

@@ -1,0 +1,9 @@
+services:
+  habittrove:
+    ports:
+      - "6864:3000"
+    volumes:
+      - "/mnt/externaldisk0/habittrove:/app/data" # Use a relative path instead of $(pwd)
+    image: dohsimpson/habittrove
+    environment:
+      - AUTH_SECRET=${AUTH_SECRET}

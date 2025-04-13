@@ -1,0 +1,21 @@
+services:
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ./config:/config
+      - /mnt/externaldisk0/media/music:/music #optional
+      - /mnt/externaldisk0/media/default:/downloads/default #optional
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+    networks:
+      - jellyfin
+
+networks:
+  jellyfin:
+    external: true

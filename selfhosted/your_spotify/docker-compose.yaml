@@ -1,0 +1,56 @@
+services:
+  server:
+    image: yooooomi/your_spotify_server:latest
+    container_name: your_spotify_server
+    restart: unless-stopped
+    ports:
+      - 8085:8080
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    environment:
+      LOG_LEVEL: info
+      #API_ENDPOINT: https://localhost:8085 # This MUST be included as a valid URL in the spotify dashboard (see below)
+      API_ENDPOINT: https://spotify_api.jaumoso.ovh
+      #CLIENT_ENDPOINT: https://localhost:3015
+      CLIENT_ENDPOINT: https://spotify.jaumoso.ovh
+      # OFFLINE_DEV_ID: true
+      SPOTIFY_PUBLIC: ${SPOTIFY_PUBLIC}
+      SPOTIFY_SECRET: ${SPOTIFY_SECRET}
+      #CORS: http://localhost:3015
+      CORS: https://spotify.jaumoso.ovh
+      TIMEZONE: Europe/Madrid
+      PUID: 1000
+      PGID: 1000
+    networks:
+      - your_spotify
+  mongo:
+    container_name: mongo_your_spotify
+    # logging:
+    #    drivers: none
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - /mnt/externaldisk0/your_spotify/your_spotify_db:/data/db
+    networks:
+      - your_spotify
+    environment:
+      PUID: 1000
+      PGID: 1000
+  web:
+    image: yooooomi/your_spotify_client:latest
+    container_name: your_spotify
+    restart: unless-stopped
+    ports:
+      - 3015:3000
+    environment:
+      NODE_ENV: production
+      API_ENDPOINT: https://spotify_api.jaumoso.ovh
+      #API_ENDPOINT: https://localhost:8085
+      PUID: 1000
+      PGID: 1000
+    networks:
+      - your_spotify
+networks:
+  your_spotify: null

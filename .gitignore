@@ -1,0 +1,13 @@
+*
+!*/
+!.gitignore
+#!unused
+#!selfhosted
+!unused/**/docker-compose.yml
+!unused/**/docker-compose.yaml
+!unused/**/compose.yml
+!unused/**/compose.yaml
+!selfhosted/**/docker-compose.yml
+!selfhosted/**/docker-compose.yaml
+!selfhosted/**/compose.yml
+!selfhosted/**/compose.yaml

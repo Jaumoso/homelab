@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  slaanesh:
+    image: ghcr.io/h-quer/slaanesh:latest
+    container_name: slaanesh
+    user: 1000:1000
+    restart: unless-stopped
+    volumes:
+      - ./config:/files/config
+      - ./import:/files/import
+      - ./export:/files/export
+      - ./covers:/files/covers
+      - ./database:/files/database
+    ports:
+      - 8428:8080
+    networks:
+      - dockerproxy
+    labels:
+      - homepage.group=Multimedia
+      - homepage.name=Slaanesh
+      - homepage.icon=https://raw.githubusercontent.com/h-quer/Slaanesh/main/assets/Slaanesh.png
+      - homepage.href=https://slaanesh.jaumoso.ovh
+      - homepage.description=Backlog de juegos
+#      - homepage.ping=http://slaanesh:8080
+      - homepage.statusStyle=dot
+    environment:
+      - PUID=1000
+      - PGID=1000
+
+networks:
+  dockerproxy:
+    external: true

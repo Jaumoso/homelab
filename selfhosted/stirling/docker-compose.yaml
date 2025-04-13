@@ -1,0 +1,17 @@
+services:
+  stirling-pdf:
+    container_name: stirling-pdf
+    restart: unless-stopped
+    image: frooodle/s-pdf:latest
+    ports:
+      - '5001:8080'
+    volumes:
+      - /mnt/externaldisk0/stirling/trainingData:/usr/share/tessdata #Required for extra OCR languages
+      - /mnt/externaldisk0/stirling/extraConfigs:/configs
+      - /mnt/externaldisk0/stirling/customFiles:/customFiles/
+      - /mnt/externaldisk0/stirling/logs:/logs/
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - PUID=1000
+      - PGID=1000

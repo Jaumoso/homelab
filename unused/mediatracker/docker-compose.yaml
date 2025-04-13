@@ -1,0 +1,60 @@
+version: "3"
+services:
+  mediatracker:
+    container_name: mediatracker
+    restart: unless-stopped
+    ports:
+      - 7481:7481
+    volumes:
+#      - ${HOME}.config/mediatracker/data:/storage
+     - ./data:/storage
+     - assetsVolume:/assets
+    environment:
+      SERVER_LANG: es
+      TMDB_LANG: es
+      AUDIBLE_LANG: es
+      TZ: Europe/Madrid
+      DATABASE_CLIENT: pg
+      DATABASE_URL: postgres://mediatracker:mediatracker_postgres123@mediatracker-db:5432/mediatrackerdb
+      DATABASE_HOST: mediatracker-db
+      DATABASE_PORT: 5432
+      DATABASE_USER: mediatracker
+      DATABASE_PASSWORD: mediatracker_postgres123
+      DATABASE_DATABASE: mediatrackerdb
+      IGDB_CLIENT_ID:
+      IGDB_CLIENT_SECRET:
+      PUID: 1000
+      PGID: 1000
+#      HOSTNAME: mediatracker
+#      PORT: 7481
+    image: bonukai/mediatracker:latest
+    networks:
+      - mediatracker
+    labels:
+      - homepage.group=Multimedia
+      - homepage.name=Mediatracker
+      - homepage.icon=https://static-00.iconduck.com/assets.00/tracker-icon-512x512-1g0mfj5c.png
+      - homepage.href=https://mediatracker.jaumoso.ovh
+      - homepage.description=Listas, colecciones y seguimiento de multimedia
+#      - homepage.ping=http://mediatracker:7481
+      - homepage.statusStyle=dot
+
+  mediatracker-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_mediatracker:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=mediatracker_postgres123
+      - POSTGRES_USER=mediatracker
+      - POSTGRES_DB=mediatrackerdb
+    container_name: mediatracker-db
+    networks:
+      - mediatracker
+
+volumes:
+  assetsVolume: null
+  postgres_mediatracker:
+
+networks:
+  mediatracker:

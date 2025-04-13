@@ -1,0 +1,31 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - WEBUI_PORT=8098
+      - TORRENTING_PORT=6887
+    volumes:
+      - ./config:/config
+#      - /mnt/externaldisk0/qbittorrent/downloads:/downloads #optional
+      # extra
+#      - /mnt/externaldisk0/media/downloads:/downloads
+      - /mnt/externaldisk0/media/movies:/downloads/movies
+      - /mnt/externaldisk0/media/anime:/downloads/anime
+      - /mnt/externaldisk0/media/series:/downloads/series
+      - /mnt/externaldisk0/media/default:/downloads/default
+      - /mmt/externaldisk0/media/music:/downloads/music
+    ports:
+      - 8098:8098
+      - 6887:6887
+      - 6887:6887/udp
+    restart: unless-stopped
+    networks:
+      - jellyfin
+
+networks:
+  jellyfin:
+    external: true

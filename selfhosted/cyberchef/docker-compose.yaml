@@ -1,0 +1,11 @@
+version: "3"
+services:
+  cyber-chef:
+    container_name: cyberchef
+    image: mpepping/cyberchef:latest
+    restart: unless-stopped
+    ports:
+      - "8155:8000"
+    environment:
+      - PUID=1000
+      - PGID=1000

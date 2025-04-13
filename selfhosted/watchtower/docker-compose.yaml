@@ -1,0 +1,19 @@
+services:
+  watchtower:
+    container_name: watchtower
+    restart: unless-stopped
+#    image: containrrr/watchtower
+    image:  beatkind/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    #      - /root/.docker/config.json:/config.json
+    command: --interval 1800
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: Europe/Madrid
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_STOPPED: "true"
+      WATCHTOWER_REVIVE_STOPPED: "false"
+      WATCHTOWER_NOTIFICATIONS: shoutrrr
+      WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL}

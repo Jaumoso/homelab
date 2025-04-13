@@ -1,0 +1,52 @@
+services:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    user: "0"
+    volumes:
+      - ./config:/etc/prometheus
+#      - /mnt/externaldisk0/prometheus/prometheus_data:/prometheus
+# temp workaround:
+      #- ./prometheus_data:/prometheus
+      - /mnt/externaldisk0/prometheus:/prometheus
+    environment:
+      - PUID=1000
+      - PGID=1000
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+#      - '--web.config.file=/etc/prometheus/web.yml'
+      - '--web.enable-lifecycle'
+    ports:
+      - 40005:9090
+    restart: unless-stopped
+    networks:
+      - prometheus
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: prometheus-node-exporter
+    command:
+#      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.wifi'
+      - '--collector.processes'
+    expose:
+      - 9100
+    networks:
+      - prometheus
+    restart: unless-stopped
+    volumes:
+#      - '/:/host:ro,rslave'
+      - /proc:/host/proc:ro
+      - /sys/:/host/sys:ro
+      - /:/rootfs:ro
+
+networks:
+  prometheus:
+    external: true

@@ -1,0 +1,10 @@
+services:
+ filebrowser:
+   container_name: it-tools
+   restart: unless-stopped
+   image: corentinth/it-tools:latest
+   ports:
+     - "8087:80"
+   environment:
+     - PUID=1000
+     - PGID=1000

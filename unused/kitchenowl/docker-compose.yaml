@@ -1,0 +1,28 @@
+services:
+  front:
+    container_name: kitchenowl
+    image: tombursch/kitchenowl-web:latest
+    restart: unless-stopped
+    environment:
+      - BACK_URL=kitchenowl-backend:5000 # Change this if you rename the containers
+    ports:
+      - "8089:80"
+    depends_on:
+      - back
+    networks:
+      - kitchenowl
+
+  back:
+    container_name: kitchenowl-backend
+    image: tombursch/kitchenowl-backend:latest
+    restart: unless-stopped
+    environment:
+      - JWT_SECRET_KEY=<jwt_secret_key_token>
+      # - FRONT_URL=http://localhost # Optional take a look at https://docs.kitchenowl.org/self-hosting/advanced/ for more info
+    volumes:
+      - /mnt/externaldisk0/kitchenowl:/data
+    networks:
+      - kitchenowl
+
+networks:
+  kitchenowl:

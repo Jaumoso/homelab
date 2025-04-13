@@ -1,0 +1,22 @@
+services:
+  sftpgo:
+    container_name: sftpgo
+    image: drakkan/sftpgo:latest
+    ports:
+#      - 2022:2022
+      - 8100:8080
+    user: 1000:1000
+    volumes:
+#      - "/mnt/externaldisk0/sftpgo/data:/srv/sftpgo"
+#      - "/mnt/externaldisk0/sftpgo/home:/var/lib/sftpgo"
+      - type: bind
+        source: /mnt/externaldisk0/sftpgo/data
+        target: /srv/sftpgo
+      - type: bind
+        source: /mnt/externaldisk0/sftpgo/home
+        target: /var/lib/sftpgo
+    environment:
+      PUID: 1000
+      PGID: 1000
+      SFTPGO_HTTPD__BINDINGS__0__PORT: 8080
+ #     SFTPGO_SFTPD__BINDINGS__0__PORT: 2022

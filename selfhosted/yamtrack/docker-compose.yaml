@@ -1,0 +1,29 @@
+services:
+  yamtrack:
+    container_name: yamtrack
+    image: ghcr.io/fuzzygrim/yamtrack
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - SECRET=${SECRET}
+      - IGDB_ID=${IGDB_ID}
+      - IGDB_SECRET=${IGDB_SECRET}
+      - IGDB_NSFW=True
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - DEBUG=False
+      - URLS=https://yamtrack.jaumoso.ovh
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - /mnt/externaldisk0/yamtrack/db:/yamtrack/db
+    ports:
+      - 8569:8000
+  redis:
+    container_name: yamtrack-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - /mnt/externaldisk0/yamtrack/redis_data:/data
+networks: {}

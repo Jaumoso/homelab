@@ -1,0 +1,32 @@
+services:
+  hemmelig:
+    container_name: hemmelig
+    image: hemmeligapp/hemmelig:v6
+    hostname: hemmelig
+    init: true
+    user: 1000:1000
+    volumes:
+      - /mnt/externaldisk0/hemmelig/files:/var/tmp/hemmelig/upload/files
+      - /mnt/externaldisk0/hemmelig/database/:/home/node/hemmelig/database/
+    environment:
+      - SECRET_LOCAL_HOSTNAME=0.0.0.0
+      - SECRET_PORT=3000
+      - SECRET_HOST=hemmelig.jaumoso.ovh
+      - SECRET_ROOT_USER=${SECRET_ROOT_USER}
+      - SECRET_ROOT_PASSWORD=${SECRET_ROOT_PASSWORD}
+      - SECRET_ROOT_EMAIL=${SECRET_ROOT_EMAIL}
+      - SECRET_FILE_SIZE=1024
+      - SECRET_FORCED_LANGUAGE=es
+      - SECRET_JWT_SECRET=${SECRET_JWT_SECRET}
+      - SECRET_MAX_TEXT_SIZE=256
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - 5148:3000
+    restart: unless-stopped
+    stop_grace_period: 1m
+    healthcheck:
+      test: wget -O /dev/null localhost:3000/api/healthz || exit 1
+      timeout: 5s
+      retries: 3
+networks: {}

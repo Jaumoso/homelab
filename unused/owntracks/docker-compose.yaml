@@ -1,0 +1,34 @@
+services:
+  otrecorder:
+    container_name: owntracks-recorder
+    image: owntracks/recorder
+    ports:
+      - 8083:8083
+    volumes:
+      - ./config:/config
+      - ./store:/store
+    restart: unless-stopped
+    environment:
+      - OTR_USER=jaumoso
+      - OTR_PASS=<password>
+      - OTR_HOST=owntracks-recorder
+      - OTR_PORT=0
+    networks:
+      - owntracks
+
+  owntracks-frontend:
+    container_name: owntracks-frontend
+    image: owntracks/frontend
+    ports:
+      - 8091:80
+    volumes:
+      - .frontend-config.js:/usr/share/nginx/html/config/config.js
+    environment:
+      - SERVER_HOST=otrecorder #owntracks-recorder
+      - SERVER_PORT=8083
+    restart: unless-stopped
+    networks:
+      - owntracks
+
+networks:
+  owntracks:

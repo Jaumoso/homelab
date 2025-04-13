@@ -1,0 +1,12 @@
+services:
+    scratch-map:
+        image: 'ad3m3r5/scratch-map:latest'
+        volumes:
+            - './data:/data'
+        environment:
+            - DBLOCATION=/data
+            - PORT=8080
+        ports:
+            - '9991:8080'
+        container_name: scratch-map
+        restart: unless-stopped

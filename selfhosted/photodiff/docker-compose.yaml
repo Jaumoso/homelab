@@ -1,0 +1,6 @@
+services:
+  photodiff:
+    container_name: photodiff
+    image: ghcr.io/jaumoso/photodiff:latest
+    ports:
+      - 4201:80

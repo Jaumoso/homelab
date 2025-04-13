@@ -1,0 +1,17 @@
+services:
+  netalertx:
+    container_name: netalertx
+    # use the below line if you want to test the latest dev image
+    # image: "jokobsk/netalertx-dev:latest" 
+    image: "jokobsk/netalertx:latest"
+    network_mode: "host"
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./db/:/app/db/
+      # (optional) useful for debugging if you have issues setting up the container
+      # - ${LOGS_LOCATION}:/app/front/log
+    environment:
+      - TZ=Europe/Madrid
+      - PORT=7000
+      - LISTEN_ADDR=0.0.0.0
