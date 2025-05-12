@@ -1,0 +1,60 @@
+services:
+  cobalt-web:
+    image: ghcr.io/imputnet/cobalt:10
+    restart: unless-stopped
+    container_name: cobalt-web
+    init: true
+    # if container doesn't run detached on your machine, uncomment the next line
+    #tty: true
+    ports:
+      - 9001:9001/tcp
+      # if you're using a reverse proxy, uncomment the next line and remove the one above (9001:9001/tcp):
+      #- 127.0.0.1:9001:9001
+
+    environment:
+      # replace https://cobalt.tools/ with your instance's target url in same format
+      WEB_URL: https://cobalt.jaumoso.ovh/
+      # replace https://api.cobalt.tools/ with preferred api instance url
+      API_URL: https://cobaltapi.jaumoso.ovh/
+    labels:
+      - com.centurylinklabs.watchtower.scope=cobalt
+  cobalt-api:
+    image: ghcr.io/imputnet/cobalt:10
+    init: true
+    read_only: true
+    restart: unless-stopped
+    container_name: cobalt-api
+    ports:
+      #9000:9000/tcp
+      # if you use a reverse proxy (such as nginx),
+      # uncomment the next line and remove the one above (9000:9000/tcp):
+      - 9100:9000
+    environment:
+      # replace https://api.url.example/ with your instance's url
+      # or else tunneling functionality won't work properly
+      API_URL: https://cobaltapi.jaumoso.ovh/
+      # if you want to use cookies for fetching data from services,
+      # uncomment the next line & volumes section
+      # COOKIE_PATH: "/cookies.json"
+
+      # it's recommended to configure bot protection or api keys if the instance is public,
+      # see /docs/protect-an-instance.md for more info
+
+      # see /docs/run-an-instance.md for more variables that you can use here
+
+    labels:
+      - com.centurylinklabs.watchtower.scope=cobalt
+      # uncomment only if you use the COOKIE_PATH variable
+      # volumes:
+      # - ./cookies.json:/cookies.json
+
+      # if needed, use this image for automatically generating poToken & visitor_data
+      # yt-session-generator:
+      #     image: ghcr.io/imputnet/yt-session-generator:webserver
+
+      #     init: true
+      #     restart: unless-stopped
+      #     container_name: yt-session-generator
+      #     labels:
+      #       - com.centurylinklabs.watchtower.scope=cobalt
+networks: {}

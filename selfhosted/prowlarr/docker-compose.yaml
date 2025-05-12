@@ -11,7 +11,7 @@ services:
       - UMASK=002
       - TZ=Europe/Madrid
     volumes:
-      - ./config:/config
+      - /mnt/externaldisk0/prowlarr:/config
     networks:
       - jellyfin
 

@@ -1,0 +1,27 @@
+services:
+  spotdl:
+    image: "spotdl/spotify-downloader"
+    restart: unless-stopped
+    volumes:
+      - /mnt/externaldisk0/media/music:/music
+      - ./:/.spotdl
+    ports:
+      - 8800:8800
+#    command: web --host "0.0.0.0" --keep-alive --web-use-output-dir
+    command: >
+      download saved
+       --log-level DEBUG
+       --format opus
+       --save-file liked.spotdl
+       --print-errors
+       --save-errors errors.txt
+       --archive archive.txt
+       --add-unavailable
+       --preload
+       --scan-for-songs
+       --overwrite force
+       --user-auth
+#       --client-id ${SPOTIFY_CLIENT_ID}
+#       --client-secret ${SPOTIFY_CLIENT_SECRET}
+
+#--client-id ${SPOTIFY_CLIENT_ID} --client-secret ${SPOTIFY_CLIENT_SECRET}

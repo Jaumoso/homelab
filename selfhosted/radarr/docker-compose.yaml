@@ -7,7 +7,7 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
-      - ./config:/config
+      - /mnt/externaldisk0/radarr:/config
       - /mnt/externaldisk0/media/movies:/movies #optional
       - /mnt/externaldisk0/media/default:/downloads/default #optional
     ports:

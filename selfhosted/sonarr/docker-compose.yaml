@@ -8,7 +8,7 @@ services:
  #     - TZ=Etc/UTC
       - TZ=Europe/Madrid
     volumes:
-      - ./config:/config
+      - /mnt/externaldisk0/sonarr:/config
       - /mnt/externaldisk0/media/series:/tv #optional
       - /mnt/externaldisk0/media/anime:/anime
       - /mnt/externaldisk0/media/default:/downloads/default #optional

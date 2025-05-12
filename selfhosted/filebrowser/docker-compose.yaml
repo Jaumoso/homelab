@@ -2,6 +2,7 @@ services:
   filebrowser:
     container_name: filebrowser
     restart: unless-stopped
+    user: "1000:1000"
     image: filebrowser/filebrowser:latest
     ports:
       - "8086:80"

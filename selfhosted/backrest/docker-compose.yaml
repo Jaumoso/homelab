@@ -1,0 +1,22 @@
+services:
+  backrest:
+    image: garethgeorge/backrest:latest
+    container_name: backrest
+    hostname: backrest
+    volumes:
+      - ./backrest/data:/data
+      - ./backrest/config:/config
+      - ./backrest/cache:/cache
+      - ./backrest/tmp:/tmp
+      - /mnt/externaldisk0:/externaldisk0  # Mount local paths to backup
+      - /mnt/externaldisk1:/externaldisk1
+#      - /path/to/local/repos:/repos     # Mount local repos (optional for remote storage)
+    environment:
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/config/config.json
+      - XDG_CACHE_HOME=/cache
+      - TMPDIR=/tmp
+      - TZ=Europe/Madrid
+    ports:
+      - "9898:9898"
+    restart: unless-stopped

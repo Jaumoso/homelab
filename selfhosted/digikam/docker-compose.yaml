@@ -1,0 +1,22 @@
+services:
+  digikam:
+    image: lscr.io/linuxserver/digikam:latest
+    container_name: digikam
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - DISABLE_IPV6=true
+      - SUBFOLDER=/ #optional
+      - LC_ALL=es_ES.UTF-8
+      - CUSTOM_USER=Jaumoso
+      - PASSWORD=${PASSWORD}
+      - FM_HOME=/media
+    volumes:
+      - ./config:/config
+      - /mnt/externaldisk1/sync/Recuerdos:/media
+    ports:
+      - 4078:3000 #optional
+    #      - 4079:3001 #optional SSL
+    restart: unless-stopped
+networks: {}
