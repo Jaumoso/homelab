@@ -9,7 +9,7 @@ services:
       - DISABLE_IPV6=true
       - SUBFOLDER=/ #optional
       - LC_ALL=es_ES.UTF-8
-      - CUSTOM_USER=Jaumoso
+      - CUSTOM_USER=${USER}
       - PASSWORD=${PASSWORD}
       - FM_HOME=/media
     volumes:
