@@ -75,3 +75,8 @@ services:
       ## Default: /etc/komodo.
       - ${PERIPHERY_ROOT_DIRECTORY:-/etc/komodo}:${PERIPHERY_ROOT_DIRECTORY:-/etc/komodo}
       - /home/jaumoso/selfhosted:/etc/komodo/stacks
+
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_PTRACE

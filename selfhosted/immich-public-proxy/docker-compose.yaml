@@ -1,0 +1,21 @@
+services:
+  immich-public-proxy:
+    image: alangrainger/immich-public-proxy:latest
+    container_name: immich-public-proxy
+    restart: unless-stopped
+    ports:
+      - "9568:3000"
+    environment:
+      - IMMICH_URL=http://immich-server:2283
+    volumes:
+      - ./config.json:/app/config.json:ro
+    healthcheck:
+      test: curl -s http://localhost:3000/share/healthcheck -o /dev/null || exit 1
+      start_period: 10s
+      timeout: 5s
+    networks:
+      - immich
+
+networks:
+  immich:
+    external: true
