@@ -25,7 +25,7 @@ services:
         datasources:
         - name: Loki
           type: loki
-          access: proxy 
+          access: proxy
           orgId: 1
           url: http://loki:3100
           basicAuth: false
@@ -46,6 +46,7 @@ services:
 
   loki:
     image: grafana/loki:latest
+    container_name: loki
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
@@ -53,6 +54,7 @@ services:
       - loki
 
   promtail:
+    container_name: promtail
     image: grafana/promtail:latest
     volumes:
       - /var/log:/var/log
