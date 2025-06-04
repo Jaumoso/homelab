@@ -5,7 +5,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Madrid
     volumes:
       - /mnt/externaldisk0/readarr:/config
       - /mnt/externaldisk0/media/books:/books #optional

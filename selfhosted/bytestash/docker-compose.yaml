@@ -1,6 +1,7 @@
 services:
   bytestash:
     image: ghcr.io/jordan-dalby/bytestash:latest
+    container_name: bytestash
     restart: unless-stopped
     volumes:
       - /mnt/externaldisk0/bytestash:/data/snippets

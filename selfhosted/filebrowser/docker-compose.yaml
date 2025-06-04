@@ -1,21 +1,27 @@
 services:
   filebrowser:
     container_name: filebrowser
-    volumes:
-#      - /mnt:/home
-      - /mnt:/srv
-      # optional if you want db to persist - configure a path under "database" dir in config file.
-      - ./filebrowser:/home/filebrowser/
-#      - "./config.yaml:/home/filebrowser/config.yaml"
-      # optional mount a temp directory to use. Generally, there is no need for this unless your user is not root or filebrowser.
-      # - './tmp/:/home/filebrowser/tmp/'
+    image: ghcr.io/gtsteffaniak/filebrowser:latest
+    restart: unless-stopped
     ports:
       - 8086:80
-    image: gtstef/filebrowser:latest
-    # optionally run as non-root filebrowser user
     user: "1000:1000"
-    restart: unless-stopped
     environment:
-      - FILEBROWSER_ADMIN_PASSWORD=${FILEBROWSER_ADMIN_PASSWORD}
-#      - FILEBROWSER_ONLYOFFICE_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
-#      - FILEBROWSER_CONFIG
+#      - FILEBROWSER_ADMIN_PASSWORD=${FILEBROWSER_ADMIN_PASSWORD}
+      - FILEBROWSER_ONLYOFFICE_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
+      - FILEBROWSER_CONFIG=/home/filebrowser/config.yaml
+    volumes:
+      - /mnt:/srv                         # your data source
+      - ./filebrowser/config.yaml:/home/filebrowser/config.yaml:ro
+      - ./filebrowser/data:/home/filebrowser/data
+      - ./filebrowser/data/db:/home/filebrowser/database
+      - ./filebrowser/data/tmp:/home/filebrowser/tmp
+
+  onlyoffice:
+    container_name: onlyoffice
+    image: onlyoffice/documentserver
+    restart: unless-stopped
+    ports:
+      - 8901:80
+    environment:
+      - JWT_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}

@@ -4,12 +4,15 @@ services:
     container_name: backrest
     hostname: backrest
     volumes:
-      - ./backrest/data:/data
-      - ./backrest/config:/config
-      - ./backrest/cache:/cache
-      - ./backrest/tmp:/tmp
+      - /mnt/externaldisk0/backrest/data:/data
+      - ./config:/config
+      - /mnt/externaldisk0/backrest/cache:/cache
+      - /mnt/externaldisk0/backrest/tmp:/tmp
       - /mnt/externaldisk0:/externaldisk0  # Mount local paths to backup
       - /mnt/externaldisk1:/externaldisk1
+      - /home/jaumoso/selfhosted:/jaumoso/selfhosted
+      - /home/jaumoso/unused:/jaumoso/unused
+      - /home/jaumoso/scripts:/jaumoso/scripts
 #      - /path/to/local/repos:/repos     # Mount local repos (optional for remote storage)
     environment:
       - BACKREST_DATA=/data
