@@ -5,23 +5,29 @@ services:
     restart: unless-stopped
     ports:
       - 8086:80
-    user: "1000:1000"
+#    user: "1000:1000"
     environment:
-#      - FILEBROWSER_ADMIN_PASSWORD=${FILEBROWSER_ADMIN_PASSWORD}
+      - FILEBROWSER_ADMIN_PASSWORD=${FILEBROWSER_ADMIN_PASSWORD}
       - FILEBROWSER_ONLYOFFICE_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
       - FILEBROWSER_CONFIG=/home/filebrowser/config.yaml
     volumes:
-      - /mnt:/srv                         # your data source
-      - ./filebrowser/config.yaml:/home/filebrowser/config.yaml:ro
-      - ./filebrowser/data:/home/filebrowser/data
-      - ./filebrowser/data/db:/home/filebrowser/database
-      - ./filebrowser/data/tmp:/home/filebrowser/tmp
+#      - /mnt:/srv # your data source
+      - /mnt/externaldisk0:/mnt/externaldisk0
+      - /mnt/externaldisk1:/mnt/externaldisk1
+      - /home/jaumoso:/mnt/home
+      - /home/jaumoso/selfhosted/filebrowser/config.yaml:/home/filebrowser/config.yaml:ro
+      - /mnt/externaldisk0/filebrowser/data:/home/filebrowser/data
+      - /mnt/externaldisk0/filebrowser/db:/home/filebrowser/database
+      - /mnt/externaldisk0/filebrowser/tmp:/home/filebrowser/tmp
 
   onlyoffice:
     container_name: onlyoffice
     image: onlyoffice/documentserver
     restart: unless-stopped
     ports:
-      - 8901:80
+#      - 8901:80
+      - 8901:443
     environment:
       - JWT_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
+#      - LETS_ENCRYPT_DOMAIN=onlyoffice.harambe.ovh
+#      - LETS_ENCRYPT_MAIL=jaumecvr2000@gmail.com

@@ -1,15 +1,18 @@
 services:
   spotdl:
     image: "spotdl/spotify-downloader"
-    restart: unless-stopped
+    restart: no
+    container_name: spotdl
     volumes:
       - /mnt/externaldisk0/media/music:/music
-      - ./:/.spotdl
     ports:
-      - 8800:8800
-#    command: web --host "0.0.0.0" --keep-alive --web-use-output-dir
+      - 9900:9900
+    environment:
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+    # command: web --host "0.0.0.0" --keep-alive --web-use-output-dir
     command: >
-      download saved
+      download https://open.spotify.com/album/1AUS845POFhV3oDytPImEZ
        --log-level DEBUG
        --format opus
        --save-file liked.spotdl
@@ -21,7 +24,9 @@ services:
        --scan-for-songs
        --overwrite force
        --user-auth
-#       --client-id ${SPOTIFY_CLIENT_ID}
-#       --client-secret ${SPOTIFY_CLIENT_SECRET}
+       --client-id ${SPOTIFY_CLIENT_ID}
+       --client-secret ${SPOTIFY_CLIENT_SECRET}
+       --no-cache
+
 
 #--client-id ${SPOTIFY_CLIENT_ID} --client-secret ${SPOTIFY_CLIENT_SECRET}

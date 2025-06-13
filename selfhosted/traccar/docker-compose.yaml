@@ -1,0 +1,27 @@
+services:
+  traccar:
+    image: 'traccar/traccar:latest'
+    volumes:
+      # - '/opt/traccar/data:/opt/traccar/data:rw'
+      - /mnt/externaldisk0/traccar/data:/opt/traccar/data:rw
+      # - '/opt/traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro'
+      - /home/jaumoso/selfhosted/traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      # - '/opt/traccar/logs:/opt/traccar/logs:rw'
+      - /mnt/externaldisk0/traccar/logs:/opt/traccar/logs:rw
+    ports:
+#      - '7500-7650:5000-5150/udp'
+#      - '7500-7650:5000-5150'
+      - '8068:8082'
+    restart: unless-stopped
+    hostname: traccar
+    container_name: traccar
+
+  traccar-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - /mnt/externaldisk0/traccar/database:/var/lib/postgresql/data
+    restart: unless-stopped
