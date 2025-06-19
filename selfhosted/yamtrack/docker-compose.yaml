@@ -26,5 +26,6 @@ services:
     restart: unless-stopped
     volumes:
       - /mnt/externaldisk0/yamtrack/redis_data:/data
-   labels:
-     - com.centurylinklabs.watchtower.enable=false
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+networks: {}
