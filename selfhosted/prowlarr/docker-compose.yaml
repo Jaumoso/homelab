@@ -14,6 +14,7 @@ services:
       - /mnt/externaldisk0/prowlarr:/config
     networks:
       - jellyfin
+#    network_mode: "container:gluetun"
 
 networks:
   jellyfin:

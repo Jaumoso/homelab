@@ -17,7 +17,7 @@ services:
       - /mnt/externaldisk0/media/anime:/downloads/anime
       - /mnt/externaldisk0/media/series:/downloads/series
       - /mnt/externaldisk0/media/default:/downloads/default
-      - /mmt/externaldisk0/media/music:/downloads/music
+      - /mnt/externaldisk0/media/music:/downloads/music
     ports:
       - 8098:8098
       - 6887:6887
@@ -25,6 +25,7 @@ services:
     restart: unless-stopped
     networks:
       - jellyfin
+#    network_mode: "container:gluetun" # Makes qBittorrent use VPN
 
 networks:
   jellyfin:

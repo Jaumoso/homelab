@@ -1,0 +1,14 @@
+services:
+  app:
+    image: ghcr.io/hargata/lubelogger:latest
+    container_name: lubelogger
+    restart: unless-stopped
+    # volumes used to keep data persistent
+    volumes:
+      - /mnt/externaldisk0/lubelogger/data:/App/data
+      - /mnt/externaldisk0/lubelogger/keys:/root/.aspnet/DataProtection-Keys
+    # expose port and/or use serving via traefik
+    ports:
+      - 8984:8080
+    env_file:
+      - .env

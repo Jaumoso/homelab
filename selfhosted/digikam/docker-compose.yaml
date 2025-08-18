@@ -17,6 +17,6 @@ services:
 #      - /mnt/externaldisk0/digikam:/config
       - /mnt/externaldisk1/sync/Recuerdos:/media
     ports:
-      - 4078:3000 #optional
-    #      - 4079:3001 #optional SSL
+#      - 4078:3000 #optional
+      - 4078:3001 #optional SSL
     restart: unless-stopped

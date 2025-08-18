@@ -20,14 +20,22 @@ services:
       - /mnt/externaldisk0/filebrowser/db:/home/filebrowser/database
       - /mnt/externaldisk0/filebrowser/tmp:/home/filebrowser/tmp
 
-#  onlyoffice:
-#    container_name: onlyoffice
-#   image: onlyoffice/documentserver
-#    restart: unless-stopped
-#    ports:
-#      - 8901:80
+  onlyoffice:
+    container_name: onlyoffice
+    image: onlyoffice/documentserver
+    restart: unless-stopped
+    ports:
+      - 8901:80
 #      - 8901:443
-#    environment:
-#      - JWT_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
-##      - LETS_ENCRYPT_DOMAIN=onlyoffice.harambe.ovh
-##      - LETS_ENCRYPT_MAIL=jaumecvr2000@gmail.com
+    environment:
+      - JWT_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
+#      - LETS_ENCRYPT_DOMAIN=office.harambe.ovh
+#      - LETS_ENCRYPT_MAIL=jaumecvr2000@gmail.com
+    entrypoint:
+       - "sh"
+       - "-c"
+       - |
+         echo 'change nginx conf to req https..'
+         sed -i "s/[$]the_scheme[;]/https;/g" /etc/onlyoffice/documentserver/nginx/includes/http-common.conf
+         echo 'done! starting server...'
+         /app/ds/run-document-server.sh

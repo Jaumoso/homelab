@@ -1,0 +1,35 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /mnt/externaldisk0/gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=${OPENVPN_USER}+pmp
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_COUNTRIES=United States
+#      - SERVER_COUNTRIES=Japan
+      - VPN_PORT_FORWARDING=on
+      - PORT_FORWARD_ONLY=off
+      - FREE_ONLY=on
+      - TZ=America/Chicago
+#      - TZ=Asia/Tokyo
+      - UPDATER_PERIOD=
+      - PGID=1000
+      - PUID=1000
+    ports:
+##      - 4554:3000 # Chromium
+      - 4555:3001 # Chromium
+#      - 9696:9696 # Prowlarr
+#      - 6887:6887 # qBittorrent conexiones entrantes
+#      - 8098:8098 # qBittorrent Web UI accessible on LAN
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+    restart: unless-stopped
