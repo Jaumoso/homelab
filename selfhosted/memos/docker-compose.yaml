@@ -1,0 +1,20 @@
+services:
+  memos:
+    image: neosmemo/memos:stable
+    container_name: memos
+    ports:
+      - 5230:5230
+    volumes:
+      - /mnt/externaldisk0/memos:/var/opt/memos
+    environment:
+      - MEMOS_MODE=prod
+      - MEMOS_PORT=5230
+      - MEMOS_DATA=/var/opt/memos
+      - MEMOS_DRIVER=sqlite
+      - MEMOS_STORAGE_TYPE=local
+      - MEMOS_STORAGE_PATH=assets/{year}/{month}/{timestamp}_{filename}
+      - MEMOS_MAX_FILE_SIZE=10485760
+    restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+networks: {}

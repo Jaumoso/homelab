@@ -5,18 +5,17 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Europe/Madrid
       - DISABLE_IPV6=true
       - SUBFOLDER=/ #optional
       - LC_ALL=es_ES.UTF-8
-#      - CUSTOM_USER=${USER}
-#      - PASSWORD=${PASSWORD}
       - FM_HOME=/media
+      - KEYBOARD=es-es-qwerty
     volumes:
       - ./config:/config
-#      - /mnt/externaldisk0/digikam:/config
       - /mnt/externaldisk1/sync/Recuerdos:/media
     ports:
-#      - 4078:3000 #optional
+      #      - 4078:3000 #optional
       - 4078:3001 #optional SSL
     restart: unless-stopped

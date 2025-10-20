@@ -10,14 +10,7 @@ services:
       - TORRENTING_PORT=6887
     volumes:
       - ./config:/config
-#      - /mnt/externaldisk0/qbittorrent/downloads:/downloads #optional
-      # extra
-#      - /mnt/externaldisk0/media/downloads:/downloads
-      - /mnt/externaldisk0/media/movies:/downloads/movies
-      - /mnt/externaldisk0/media/anime:/downloads/anime
-      - /mnt/externaldisk0/media/series:/downloads/series
-      - /mnt/externaldisk0/media/default:/downloads/default
-      - /mnt/externaldisk0/media/music:/downloads/music
+      - /mnt/externaldisk0/media/default:/downloads
     ports:
       - 8098:8098
       - 6887:6887

@@ -1,15 +1,15 @@
 services:
   uptime-kuma:
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:beta
     container_name: uptime-kuma
     volumes:
-      - ./uptime-kuma-data:/app/data
+      - /mnt/externaldisk0/uptime-kuma/data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 3002:3001  # <Host Port>:<Container Port>
     restart: unless-stopped
-#    environment:
-#      - PUID=1000
-#      - PGID=1000
+    environment:
+      PUID: 1000
+      PGID: 1000
 
 

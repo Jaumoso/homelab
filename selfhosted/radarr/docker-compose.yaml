@@ -9,13 +9,12 @@ services:
     volumes:
       - /mnt/externaldisk0/radarr:/config
       - /mnt/externaldisk0/media/movies:/movies #optional
-      - /mnt/externaldisk0/media/default:/downloads/default #optional
+      - /mnt/externaldisk0/media/default:/downloads #optional
     ports:
       - 7878:7878
     restart: unless-stopped
     networks:
       - jellyfin
-
 networks:
   jellyfin:
     external: true

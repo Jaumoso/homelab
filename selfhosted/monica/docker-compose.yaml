@@ -1,0 +1,28 @@
+services:
+  app:
+    image: monica
+    container_name: monica
+    depends_on:
+      - db
+    ports:
+      - 8485:80
+    environment:
+      - DB_HOST=db
+      - DB_CONNECTION=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    restart: unless-stopped
+  db:
+    image: mysql:5.7
+    container_name: monica-db
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=true
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - /mnt/externaldisk0/monica/db:/var/lib/mysql
+    restart: unless-stopped
+networks: {}

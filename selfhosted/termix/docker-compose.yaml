@@ -1,0 +1,12 @@
+services:
+  termix:
+    image: ghcr.io/lukegus/termix:latest
+    container_name: termix
+    restart: unless-stopped
+    ports:
+      - "4855:8080"
+    volumes:
+      - ./termix-data:/app/data
+    environment:
+      PORT: "8080"
+

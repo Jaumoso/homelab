@@ -1,0 +1,93 @@
+services:
+  immich-kiosk:
+    image: ghcr.io/damongolding/immich-kiosk:latest
+    container_name: immich-kiosk
+    tty: true
+    environment:
+      LANG: "es_ES"
+      TZ: "Europe/Madrid"
+    # Config
+      KIOSK_IMMICH_API_KEY: ${KIOSK_IMMICH_API_KEY}
+      KIOSK_IMMICH_URL: "http://192.168.1.20:2283"
+      KIOSK_IMMICH_EXTERNAL_URL: "http://immich.jaumoso.ovh"
+      KIOSK_SHOW_TIME: true
+      KIOSK_TIME_FORMAT: 12
+      KIOSK_SHOW_DATE: true
+      KIOSK_DATE_FORMAT: "DD/MM/YYYY"
+      KIOSK_CLOCK_SOURCE: "server" # client server
+      KIOSK_DURATION: 60
+      KIOSK_DISABLE_SCREENSAVER: false # TODO check
+      KIOSK_OPTIMIZE_IMAGES: true
+      KIOSK_USE_GPU: false
+      KIOSK_SHOW_ARCHIVED: false
+#      KIOSK_ALBUMS: []
+      KIOSK_ALBUM_ORDER: "random" # random newest olders
+#      KIOSK_EXCLUDED_ALBUMS: []
+      KIOSK_ALBUM_VIDEO: true
+      KIOSK_LIVE_PHOTOS: true
+      KIOSK_LIVE_PHOTO_LOOP_DELAY: 0
+#      KIOSK_PEOPLE: []
+      KIOSK_REQUIRE_ALL_PEOPLE: false
+#      KIOSK_EXCLUDED_PEOPLE: []
+#      KIOSK_DATES: []
+#      KIOSK_TAGS: []
+      KIOSK_MEMORIES: true
+#      KIOSK_BLACKLIST: []
+#      KIOSK_DATE_FILTER: []
+      KIOSK_DISABLE_NAVIGATION: false
+      KIOSK_DISABLE_UI: false
+      KIOSK_MENU_POSITION: "top"
+      KIOSK_FRAMELESS: false
+      KIOSK_HIDE_CURSOR: true
+      KIOSK_FONT_SIZE: 100
+      KIOSK_BACKGROUND_BLUR: true
+      KIOSK_BACKGROUND_BLUR_AMOUNT: 10
+      KIOSK_THEME: "fade" # fade solid bubble
+      KIOSK_LAYOUT: "single" # single portrait landscape splitview splitview-landscape
+     # KIOSK_SLEEP_START: ""
+     # KIOSK_SLEEP_END: ""
+     # KIOSK_SLEEP_ICON: ""
+     # KIOSK_SLEEP_DIM_SCREEN: ""
+      KIOSK_TRANSITION: "cross-fade" # none fade cross-fade
+      KIOSK_FADE_TRANSITION_DURATION: 1.5
+      KIOSK_CROSS_FADE_TRANSITION_DURATION: 1.5
+      KIOSK_SHOW_PROGRESS_BAR: true
+      KIOSK_PROGRESS_BAR_POSITION: "top" # top bottom
+      KIOSK_IMAGE_FIT: "contain" # contain cover none
+      KIOSK_IMAGE_EFFECT: "none" # none zoom smart-zoom
+      KIOSK_IMAGE_EFFECT_AMOUNT: 120
+      KIOSK_USE_ORIGINAL_IMAGE: false
+      KIOSK_SHOW_OWNER: false
+      KIOSK_SHOW_ALBUM_NAME: false
+      KIOSK_SHOW_PERSON_NAME: true
+      KIOSK_SHOW_PERSON_AGE: true
+      KIOSK_SHOW_IMAGE_TIME: true
+      KIOSK_IMAGE_TIME_FORMAT: 12
+      KIOSK_SHOW_IMAGE_DATE: true
+      KIOSK_IMAGE_DATE_FORMAT: "DD/MM/YYYY"
+      KIOSK_SHOW_IMAGE_DESCRIPTION: false
+      KIOSK_SHOW_IMAGE_EXIF: false
+      KIOSK_SHOW_IMAGE_LOCATION: true
+      KIOSK_SHOW_IMAGE_QR: false
+#      KIOSK_HIDE_COUNTRIES: []
+      KIOSK_SHOW_MORE_INFO: false
+      KIOSK_SHOW_MORE_INFO_IMAGE_LINK: false
+      KIOSK_SHOW_MORE_INFO_QR_CODE: false
+#      KIOSK_LIKE_BUTTON_ACTION: []
+      KIOSK_HIDE_BUTTON_ACTION: false
+      KIOSK_SHOW_USER: false
+      KIOSK_USE_OFFLINE_MODE: false
+#      KIOSK_IFRAME: "https://home.jaumoso.ovh"
+    ports:
+      - 3964:3000
+    volumes:
+      - ./config:/config
+      # - ./custom.css:/custom.css
+      # - ./offline-assets:/offline-assets
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
