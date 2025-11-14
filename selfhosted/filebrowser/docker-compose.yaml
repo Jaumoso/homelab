@@ -30,7 +30,7 @@ services:
     environment:
       - JWT_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
 #      - LETS_ENCRYPT_DOMAIN=office.jaumoso.ovh
-#      - LETS_ENCRYPT_MAIL=jaumecvr2000@gmail.com
+#      - LETS_ENCRYPT_MAIL=example@gmail.com
     entrypoint:
        - "sh"
        - "-c"

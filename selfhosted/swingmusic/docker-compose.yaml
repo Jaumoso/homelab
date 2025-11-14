@@ -1,0 +1,10 @@
+services:
+  swingmusic:
+    image: ghcr.io/swingmx/swingmusic:latest
+    container_name: swingmusic
+    volumes:
+      - /mnt/externaldisk0/media/music:/music
+      - /mnt/externaldisk0/swingmusic:/config
+    ports:
+      - "1970:1970"
+    restart: unless-stopped

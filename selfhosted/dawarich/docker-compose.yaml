@@ -13,12 +13,7 @@ services:
       - /mnt/externaldisk0/dawarich/dawarich_shared:/data
     restart: always
     healthcheck:
-      test:
-        - CMD
-        - redis-cli
-        - --raw
-        - incr
-        - ping
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -37,11 +32,9 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
-    restart: always
+    restart: unless-stopped
     healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U ${DATABASE_USER} -d dawarich_development
+      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}" ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -65,29 +58,24 @@ services:
     stdin_open: true
     tty: true
     entrypoint: web-entrypoint.sh
-    command:
-      - bin/rails
-      - server
-      - -p
-      - "3000"
-      - -b
-      - "::"
+    command: ['bin/rails', 'server', '-p', '3000', '-b', '::']
     restart: on-failure
     environment:
-      RAILS_ENV: development
+      RAILS_ENV: production
       REDIS_URL: redis://dawarich_redis:6379
       DATABASE_HOST: dawarich_db
       DATABASE_USERNAME: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_NAME: ${DATABASE_NAME}
       MIN_MINUTES_SPENT_IN_CITY: 60
-      APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,dawarich.harambe.ovh,homelab
+      APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab
       TIME_ZONE: Europe/Madrid
       APPLICATION_PROTOCOL: http
       DISTANCE_UNIT: km
       PROMETHEUS_EXPORTER_ENABLED: "false"
       PROMETHEUS_EXPORTER_HOST: 0.0.0.0
       PROMETHEUS_EXPORTER_PORT: 9394 # try: https://dawarich.app/docs/tutorials/telemetry
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       SELF_HOSTED: "true"
       STORE_GEODATA: "true"
       GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
@@ -97,10 +85,7 @@ services:
         max-size: 100m
         max-file: "5"
     healthcheck:
-      test:
-        - CMD-SHELL
-        - wget -qO - http://127.0.0.1:3000/api/v1/health | grep -q
-          '"status"\s*:\s*"ok"'
+      test: [ "CMD-SHELL", "wget -qO - http://127.0.0.1:3000/api/v1/health | grep -q '\"status\"\\s*:\\s*\"ok\"'" ]
       interval: 10s
       retries: 30
       start_period: 30s
@@ -131,11 +116,10 @@ services:
     stdin_open: true
     tty: true
     entrypoint: sidekiq-entrypoint.sh
-    command:
-      - sidekiq
+    command: ['sidekiq']
     restart: on-failure
     environment:
-      RAILS_ENV: development
+      RAILS_ENV: production
       REDIS_URL: redis://dawarich_redis:6379
       DATABASE_HOST: dawarich_db
       DATABASE_USERNAME: ${DATABASE_USER}
@@ -149,6 +133,7 @@ services:
       PROMETHEUS_EXPORTER_HOST: dawarich_app
       PROMETHEUS_EXPORTER_PORT: 9394
       ENABLE_TELEMETRY: false # More on telemetry: https://dawarich.app/docs/tutorials/telemetry
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       SELF_HOSTED: "true"
       STORE_GEODATA: "true"
       GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
@@ -158,9 +143,7 @@ services:
         max-size: 100m
         max-file: "5"
     healthcheck:
-      test:
-        - CMD-SHELL
-        - pgrep -f sidekiq
+      test: [ "CMD-SHELL", "pgrep -f sidekiq" ]
       interval: 10s
       retries: 30
       start_period: 30s

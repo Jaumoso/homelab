@@ -1,0 +1,18 @@
+services:
+  photo-watcher:
+    image: ghcr.io/jaumoso/photo-watcher:latest
+    container_name: photo-watcher
+    restart: unless-stopped
+    user: 1000:1000
+    environment:
+      - SOURCE_DIRS=/source/WhatsappImages,/source/WhatsappVideo,/source/Camera # Add more if needed, comma separated
+      - TARGET_BASE=/target
+    volumes:
+      ## Source - Add more if needed
+      - /mnt/externaldisk1/sync/Whatsapp Images:/source/WhatsappImages:ro
+      - /mnt/externaldisk1/sync/Whatsapp Video:/source/WhatsappVideo:ro
+      - /mnt/externaldisk1/sync/Android Cámara/Camera:/source/Camera:ro
+      - /mnt/externaldisk1/sync/Recuerdos:/target:rw
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+networks: {}
