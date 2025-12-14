@@ -1,10 +1,13 @@
 services:
- filebrowser:
-   container_name: it-tools
-   restart: unless-stopped
-   image: corentinth/it-tools:latest
-   ports:
-     - "8087:80"
-   environment:
-     - PUID=1000
-     - PGID=1000
+  it-tools:
+    container_name: it-tools
+  # image: CorentinTh/it-tools:latest
+    image: sharevb/it-tools:latest
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - 8087:8080
+    environment:
+      - PUID=1000
+      - PGID=1000
+networks: {}

@@ -7,11 +7,12 @@ services:
     environment:
       - SOURCE_DIRS=/source/WhatsappImages,/source/WhatsappVideo,/source/Camera # Add more if needed, comma separated
       - TARGET_BASE=/target
+      - IGNORE_FILES=".**"
     volumes:
       ## Source - Add more if needed
       - /mnt/externaldisk1/sync/Whatsapp Images:/source/WhatsappImages:ro
-      - /mnt/externaldisk1/sync/Whatsapp Video:/source/WhatsappVideo:ro
-      - /mnt/externaldisk1/sync/Android Cámara/Camera:/source/Camera:ro
+      - /mnt/externaldisk1/sync/Whatsapp Videos:/source/WhatsappVideo:ro
+      - /mnt/externaldisk1/sync/Camera/Camera:/source/Camera:ro
       - /mnt/externaldisk1/sync/Recuerdos:/target:rw
     labels:
       - com.centurylinklabs.watchtower.enable=false
