@@ -10,7 +10,8 @@ services:
       - TORRENTING_PORT=6887
     volumes:
       - ./config:/config
-      - /mnt/externaldisk0/media/default:/downloads
+      # - /mnt/externaldisk0/media/default:/downloads
+      - /mnt/externaldisk0/media:/media
     ports:
       - 8098:8098
       - 6887:6887

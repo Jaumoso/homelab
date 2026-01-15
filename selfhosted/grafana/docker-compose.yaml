@@ -43,25 +43,26 @@ services:
           editable: false
         EOF
         /run.sh
-#  loki:
-#    image: grafana/loki:latest
-#    container_name: loki
-#    ports:
-#      - 3100:3100
-#    command: -config.file=/etc/loki/local-config.yaml
-# 
-#    networks:
-#      - loki
-#    restart: unless-stopped
-  promtail:
-    container_name: promtail
-    image: grafana/promtail:latest
-    volumes:
-      - /var/log:/var/log
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - loki
-    restart: unless-stopped
+ # loki:
+ #   image: grafana/loki:latest
+ #   container_name: loki
+ #   ports:
+ #     - 3100:3100
+ #   volumes:
+ #   command: -config.file=/etc/loki/local-config.yaml
+ #   networks:
+ #     - loki
+ #   restart: unless-stopped
+ # promtail:
+ #   container_name: promtail
+ #   image: grafana/promtail:latest
+ #   volumes:
+ #     - /var/log:/var/log
+ #   command: -config.file=/etc/promtail/config.yml
+ #   networks:
+ #     - loki
+ #   restart: unless-stopped
+    
 networks:
   loki: null
   prometheus:

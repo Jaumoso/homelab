@@ -2,8 +2,9 @@ services:
   watchtower:
     container_name: watchtower
     restart: unless-stopped
-#    image: containrrr/watchtower
-    image:  beatkind/watchtower
+    #    image: containrrr/watchtower
+    #    image: beatkind/watchtower
+    image: ghcr.io/nicholas-fedor/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     #      - /root/.docker/config.json:/config.json
@@ -17,3 +18,4 @@ services:
       WATCHTOWER_REVIVE_STOPPED: "false"
       WATCHTOWER_NOTIFICATIONS: shoutrrr
       WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL}
+networks: {}

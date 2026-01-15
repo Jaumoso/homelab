@@ -5,13 +5,14 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
- #     - TZ=Etc/UTC
+      #     - TZ=Etc/UTC
       - TZ=Europe/Madrid
     volumes:
       - /mnt/externaldisk0/sonarr:/config
-      - /mnt/externaldisk0/media/series:/tv #optional
-      - /mnt/externaldisk0/media/anime:/anime
-      - /mnt/externaldisk0/media/default:/downloads/default #optional
+      #- /mnt/externaldisk0/media/series:/tv #optional
+      #- /mnt/externaldisk0/media/anime:/anime
+      #- /mnt/externaldisk0/media/default:/downloads/default #optional
+      - /mnt/externaldisk0/media:/media
     ports:
       - 8989:8989
     restart: unless-stopped

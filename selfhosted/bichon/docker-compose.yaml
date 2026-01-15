@@ -1,0 +1,12 @@
+services:
+  bichon:
+    container_name: bichon
+    image: rustmailer/bichon:latest
+    ports:
+      - 15630:15630
+    volumes:
+      - /mnt/externaldisk0/bichon:/data
+    environment:
+      - BICHON_LOG_LEVEL=info
+      - BICHON_ROOT_DIR=/data
+      - BICHON_CORS_ORIGINS=https://bichon.jaumoso.ovh

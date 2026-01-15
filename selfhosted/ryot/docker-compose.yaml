@@ -1,0 +1,31 @@
+services:
+  ryot-db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    container_name: ryot-db
+    volumes:
+      - ./postgres:/var/lib/postgresql
+    environment:
+      - TZ=Europe/Madrid
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  ryot:
+    image: ignisda/ryot:v10
+    pull_policy: always
+    container_name: ryot
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    environment:
+      - TZ=Europe/Madrid
+      - FRONTEND_URL=https://ryot.jaumoso.ovh # IP address is fine too
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@ryot-db:5432/${POSTGRES_DB} # REQUIRED
+      - SERVER_ADMIN_ACCESS_TOKEN=${SERVER_ADMIN_ACCESS_TOKEN} # REQUIRED: set to a long random string
+      - DISABLE_TELEMETRY=true
+      - VIDEO_GAMES_TWITCH_CLIENT_ID=${VIDEO_GAMES_TWITCH_CLIENT_ID}
+      - VIDEO_GAMES_TWITCH_CLIENT_SECRET=${VIDEO_GAMES_TWITCH_CLIENT_SECRET}
+      - MUSIC_SPOTIFY_CLIENT_ID=${MUSIC_SPOTIFY_CLIENT_ID}
+      - MUSIC_SPOTIFY_CLIENT_SECRET=${MUSIC_SPOTIFY_CLIENT_SECRET}
+      - MOVIES_AND_SHOWS_TMDB_ACCESS_TOKEN=${MOVIES_AND_SHOWS_TMDB_ACCESS_TOKEN}
+networks: {}
