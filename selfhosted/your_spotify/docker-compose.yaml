@@ -43,7 +43,8 @@ services:
       PGID: 1000
     labels:
       - com.centurylinklabs.watchtower.enable=false
-
+    # Reduce verbosity
+    command: "mongod --quiet"
   web:
     image: yooooomi/your_spotify_client:latest
     container_name: your_spotify

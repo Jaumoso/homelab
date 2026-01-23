@@ -7,7 +7,8 @@ services:
       - 3000:3000
     volumes:
       - /mnt/externaldisk0/grafana/grafana-data:/var/lib/grafana
-      - /mnt/externaldisk0/grafana/provisioning:/etc/grafana/provisioning/
+      #- /mnt/externaldisk0/grafana/provisioning:/etc/grafana/provisioning
+      - /home/jaumoso/selfhosted/grafana/provisionings:/etc/grafana/provisionings
     restart: unless-stopped
     environment:
       - PUID=1000
@@ -15,54 +16,29 @@ services:
     networks:
       - prometheus
       - loki
-    entrypoint:
-      - sh
-      - -euc
-      - |
-        mkdir -p /etc/grafana/provisioning/datasources
-        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-        apiVersion: 1
-        datasources:
-        - name: Loki
-          type: loki
-          access: proxy
-          orgId: 1
-          url: http://loki:3100
-          basicAuth: false
-          isDefault: false
-          version: 1
-          editable: false
-        - name: prometheus
-          type: prometheus
-          access: proxy
-          orgId: 1
-          url: http://prometheus:9090
-          basicAuth: false
-          isDefault: true
-          version: 1
-          editable: false
-        EOF
-        /run.sh
- # loki:
- #   image: grafana/loki:latest
- #   container_name: loki
- #   ports:
- #     - 3100:3100
- #   volumes:
- #   command: -config.file=/etc/loki/local-config.yaml
- #   networks:
- #     - loki
- #   restart: unless-stopped
- # promtail:
- #   container_name: promtail
- #   image: grafana/promtail:latest
- #   volumes:
- #     - /var/log:/var/log
- #   command: -config.file=/etc/promtail/config.yml
- #   networks:
- #     - loki
- #   restart: unless-stopped
-    
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - 3100:3100
+    volumes:
+      #- /mnt/externaldisk0/loki:/etc/loki
+      - /home/jaumoso/selfhosted/grafana/loki-config.yaml:/etc/loki/loki-config.yaml
+    command: -config.file=/etc/loki/loki-config.yaml
+    networks:
+      - loki
+    restart: unless-stopped
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:latest
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /home/jaumoso/selfhosted/grafana/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - loki
+    restart: unless-stopped
 networks:
   loki: null
   prometheus:
