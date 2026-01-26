@@ -6,6 +6,7 @@ services:
     environment:
       LANG: es_ES
       TZ: Europe/Madrid
+      KIOSK_LOG_LEVEL: warn
       # Config
       KIOSK_IMMICH_API_KEY: ${KIOSK_IMMICH_API_KEY}
       KIOSK_IMMICH_URL: http://192.168.1.20:2283

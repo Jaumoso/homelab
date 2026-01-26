@@ -7,7 +7,7 @@ services:
     volumes:
       - /mnt/externaldisk0/bichon:/data
     environment:
-      - BICHON_LOG_LEVEL=info
+      - BICHON_LOG_LEVEL=warn
       - BICHON_ROOT_DIR=/data
       - BICHON_CORS_ORIGINS=https://bichon.jaumoso.ovh
     restart: unless-stopped
