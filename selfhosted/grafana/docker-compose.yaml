@@ -32,9 +32,15 @@ services:
     container_name: promtail
     image: grafana/promtail:latest
     volumes:
+      # Carpeta de logs del sistema
       - /var/log:/var/log
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # Persistencia de positions
+      - /home/jaumoso/selfhosted/grafana/positions:/var/lib/promtail
+      #- /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # Configuracion de promtail
       - /home/jaumoso/selfhosted/grafana/promtail-config.yaml:/etc/promtail/config.yml
+      # Sock de docker para logs
+      - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/config.yml
     networks:
       - loki

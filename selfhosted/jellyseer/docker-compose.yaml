@@ -3,7 +3,7 @@ services:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     environment:
-      - LOG_LEVEL=info
+      - LOG_LEVEL=warn
       - TZ=Europe/Madrid
       - PORT=5055 #optional
     ports:
@@ -13,7 +13,6 @@ services:
     restart: unless-stopped
     networks:
       - jellyfin
-
 networks:
   jellyfin:
     external: true

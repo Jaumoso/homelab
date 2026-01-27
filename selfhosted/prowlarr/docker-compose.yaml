@@ -14,14 +14,14 @@ services:
       - /mnt/externaldisk0/prowlarr:/config
     networks:
       - jellyfin
-#    network_mode: "container:gluetun"
+  #    network_mode: "container:gluetun"
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     restart: unless-stopped
     environment:
-      - LOG_LEVEL=info
+      - LOG_LEVEL=warn
       - LOG_HTML=false
       - CAPTCHA_SOLVER=none
       - TZ=Europe/Madrid
@@ -29,7 +29,6 @@ services:
       - 8191:8191
     networks:
       - jellyfin
-
 networks:
   jellyfin:
     external: true
