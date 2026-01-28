@@ -21,7 +21,7 @@ services:
       # Docker socket for command execution
       - /var/run/docker.sock:/var/run/docker.sock
       # Data persistence
-      - /mnt/externaldisk0/cronmaster/scripts:/app/scripts
+      - /home/jaumoso/scripts:/app/scripts
       - /mnt/externaldisk0/cronmaster/data:/app/data
       - /mnt/externaldisk0/cronmaster/snippets:/app/snippets
     pid: host

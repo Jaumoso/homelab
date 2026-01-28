@@ -14,6 +14,7 @@ services:
       - /home/jaumoso/selfhosted:/jaumoso/selfhosted
       - /home/jaumoso/unused:/jaumoso/unused
       - /home/jaumoso/scripts:/jaumoso/scripts
+      - /etc:/host-etc:ro  # Config del sistema (solo lectura)
     #      - /path/to/local/repos:/repos     # Mount local repos (optional for remote storage)
     environment:
       - BACKREST_DATA=/data
