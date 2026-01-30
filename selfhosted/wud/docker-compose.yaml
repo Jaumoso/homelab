@@ -1,0 +1,26 @@
+services:
+  wud:
+    image: getwud/wud:latest
+    container_name: wud
+    restart: unless-stopped
+    ports:
+      - 3333:3000
+    environment:
+      WUD_LOG_LEVEL: info
+      # Watcher - Docker local
+      WUD_WATCHER_LOCAL_SOCKET: /var/run/docker.sock
+      WUD_WATCHER_LOCAL_WATCHBYDEFAULT: true
+      # Trigger ntfy (priority: 1=min, 2=low, 3=default, 4=high, 5=max)
+      WUD_TRIGGER_NTFY_HOMELAB_URL: http://ntfy:80
+      WUD_TRIGGER_NTFY_HOMELAB_TOPIC: docker-updates
+      WUD_TRIGGER_NTFY_HOMELAB_PRIORITY: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/store
+    networks:
+      - wud_default
+      - ntfy_default
+networks:
+  wud_default: null
+  ntfy_default:
+    external: true

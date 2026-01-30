@@ -2,6 +2,7 @@ services:
   ntfy:
     image: binwiederhier/ntfy
     restart: unless-stopped
+    container_name: ntfy
     environment:
       NTFY_BASE_URL: http://ntfy.jaumoso.ovh
       NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
@@ -14,5 +15,6 @@ services:
     volumes:
       - /mnt/externaldisk0/ntfy:/var/lib/ntfy
     ports:
-      - "5684:80"
+      - 5684:80
     command: serve
+networks: {}

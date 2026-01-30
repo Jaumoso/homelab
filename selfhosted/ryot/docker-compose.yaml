@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     container_name: ryot-db
     volumes:
-      - ./postgres:/var/lib/postgresql
+      - /mnt/externaldisk0/ryot/postgres:/var/lib/postgresql
     environment:
       - TZ=Europe/Madrid
       - POSTGRES_DB=${POSTGRES_DB}
