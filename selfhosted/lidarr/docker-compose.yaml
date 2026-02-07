@@ -8,14 +8,12 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - /mnt/externaldisk0/lidarr:/config
-      - /mnt/externaldisk0/media/music:/music #optional
-      - /mnt/externaldisk0/media/default:/downloads/default #optional
+      - /mnt/externaldisk0/media:/media
     ports:
       - 8686:8686
     restart: unless-stopped
     networks:
       - jellyfin
-
 networks:
   jellyfin:
     external: true
