@@ -30,9 +30,9 @@ services:
   mongo:
     container_name: mongo_your_spotify
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
-        max-size: "1m"
+        max-size: 1m
         max-file: "1"
     image: mongo:6
     restart: unless-stopped
@@ -45,7 +45,7 @@ services:
       PGID: 1000
     labels:
       - com.centurylinklabs.watchtower.enable=false
-    command: ["mongod", "--quiet", "--setParameter", "logLevel=0"]
+    command: --quiet
   web:
     image: yooooomi/your_spotify_client:latest
     container_name: your_spotify
