@@ -1,0 +1,15 @@
+services:
+  immich-selfie-timelapse:
+    user: "1000:1000"
+    image: arnaudcayrol/immich-selfie-timelapse
+    container_name: immich-selfie-timelapse
+    ports:
+      - 5000:5000
+    environment:
+      - IMMICH_API_KEY=CimQ15kEBcGv69F0mMpG8k0APQep9G3osqYDzkje04
+      - IMMICH_BASE_URL=http://192.168.1.20:2283
+    volumes:
+      - /home/jaumoso/selfhosted/immich-selfie-timelapse/config:/app/config
+      - /home/jaumoso/selfhosted/immich-selfie-timelapse/output:/app/output
+    restart: unless-stopped
+networks: {}

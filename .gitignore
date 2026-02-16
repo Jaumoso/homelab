@@ -11,3 +11,4 @@
 !selfhosted/**/docker-compose.yaml
 !selfhosted/**/compose.yml
 !selfhosted/**/compose.yaml
+selfhosted/nanobot
