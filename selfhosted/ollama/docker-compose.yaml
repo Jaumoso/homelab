@@ -1,8 +1,10 @@
 services:
   ollama:
     image: ollama/ollama
+    network_mode: host
     container_name: ollama
     ports:
-      - '11434:11434'
+      - 11434:11434
     volumes:
       - /mnt/externaldisk0/ollama:/root/.ollama
+networks: {}
