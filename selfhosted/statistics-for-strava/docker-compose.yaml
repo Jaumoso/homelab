@@ -11,3 +11,4 @@ services:
     env_file: ./.env
     ports:
       - 8967:8080
+networks: {}

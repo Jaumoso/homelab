@@ -22,7 +22,7 @@ services:
       WUD_TRIGGER_NTFY_HOMELAB_TOPIC: docker-updates
       WUD_TRIGGER_NTFY_HOMELAB_PRIORITY: 3
       WUD_TRIGGER_NTFY_HOMELAB_AUTH_TOKEN: ${WUD_TRIGGER_NTFY_HOMELAB_AUTH_TOKEN}
-      WUD_TRIGGER_NTFY_HOMELAB_ONCE: "false"
+      WUD_TRIGGER_NTFY_HOMELAB_ONCE: "true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./data:/store

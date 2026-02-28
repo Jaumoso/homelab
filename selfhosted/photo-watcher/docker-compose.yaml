@@ -7,7 +7,7 @@ services:
     environment:
       - SOURCE_DIRS=/source/WhatsappImages,/source/WhatsappVideo,/source/Camera # Add more if needed, comma separated
       - TARGET_BASE=/target
-      - IGNORE_FILES=".**,**trashed**"
+      - IGNORE_FILES=.*,*trashed*
     volumes:
       ## Source - Add more if needed
       - /mnt/externaldisk1/sync/Whatsapp Images:/source/WhatsappImages:ro
