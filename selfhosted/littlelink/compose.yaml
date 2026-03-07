@@ -1,0 +1,52 @@
+services:
+  littlelink-server:
+    image: ghcr.io/timothystewart6/littlelink-server:latest
+    # dockerhub is also supported timothystewart6/littlelink-server
+    # image: timothystewart6/littlelink-server:latest
+    container_name: littlelink-server
+    environment:
+      - META_TITLE=Jaume C
+      #- META_DESCRIPTION=Software Engineer | Gamer | Twitch Streamer | Content Creator on YouTube | Homelab | 🇺🇸 🇯🇵  | Full Nerd
+      - META_AUTHOR=Jaume C
+      #- META_KEYWORDS=HomeLab, HTML, CSS, Engineering
+      - LANG=es
+      - META_INDEX_STATUS=all
+      - OG_SITE_NAME=Jaume C
+      - OG_TITLE=Jaume C
+      - OG_DESCRIPTION=The home of Jaume C
+      - OG_URL=https://jaumoso.ovh
+      - OG_IMAGE=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
+      - OG_IMAGE_WIDTH=400
+      - OG_IMAGE_HEIGHT=400
+      - GA_TRACKING_ID=G-XXXXXXXXXX
+      - THEME=Dark
+      - FAVICON_URL=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
+      - AVATAR_URL=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
+      - AVATAR_2X_URL=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
+      - AVATAR_ALT=Jaume C Profile Pic
+      - NAME=Jaume C
+      #- BIO=Software Engineer | Gamer | Twitch Streamer | Content Creator on YouTube | Homelab | 🇺🇸 🇯🇵 | Full Nerd
+      # use ENV variable names for order, listed buttons will be boosted to the top
+      - BUTTON_ORDER=INSTAGRAM,DISCORD,GITHUB,SPOTIFY,STEAM,GOODREADS
+      # you can render an unlimited amount of custom buttons by adding 
+      # the CUSTOM_BUTTON_* variables and by using a comma as a separator.
+      #- CUSTOM_BUTTON_TEXT=Documentation,Recommended Gear
+      #- CUSTOM_BUTTON_URL=https://l.technotim.com/docs,https://l.technotim.com/gear
+      #- CUSTOM_BUTTON_COLOR=#000000,#000000
+      #- CUSTOM_BUTTON_TEXT_COLOR=#ffffff,#ffffff
+      #- CUSTOM_BUTTON_ALT_TEXT=Tech documentation site for my videos and more,Recommended Gear
+      #- CUSTOM_BUTTON_NAME=DOCUMENTATION,GEAR
+      #- CUSTOM_BUTTON_ICON=fas file-alt,fas fa-cog
+      - INSTAGRAM=https://www.instagram.com/jaumoso/
+      - DISCORD=https://discord.com/users/331880264655437834
+      - GITHUB=https://github.com/Jaumoso
+      - SPOTIFY=https://open.spotify.com/user/jaumoso23
+      - STEAM=https://steamcommunity.com/id/jaumec/
+      - GOODREADS=https://www.goodreads.com/user/show/112380807-jaume
+      #- FOOTER=Jaume C © 2026
+    ports:
+      - 9485:3000
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+networks: {}

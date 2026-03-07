@@ -1,0 +1,73 @@
+# BREAKING CHANGE (v1.3+): Database volume mount changed from /app/database to /app/data
+# If upgrading from a previous version, update your docker-compose.yml:
+#   OLD: - soulsync_database:/app/database
+#   NEW: - soulsync_database:/app/data
+# Your data will be preserved - it's the same volume, just mounted at a different path.
+
+services:
+  soulsync:
+    image: boulderbadgedad/soulsync:latest
+    container_name: soulsync-webui
+    environment:
+      # User/Group ID configuration
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      # Web server configuration
+      - FLASK_ENV=production
+      - PYTHONPATH=/app
+      # Optional: Configure through environment variables
+      - SOULSYNC_CONFIG_PATH=/app/config/config.json
+      # Set timezone (change to your timezone)
+      - TZ=Europe/Madrid
+    ports:
+      - 8008:8008 # Main web app
+    #      - "8888:8888" # Spotify OAuth callback
+    #      - "8889:8889" # Tidal OAuth callback
+    volumes:
+      # Persistent data volumes
+      - /home/jaumoso/selfhosted/soulsync/config:/app/config
+      - /mnt/externaldisk0/soulsync/logs:/app/logs
+      - /mnt/externaldisk0/media/downloads/music:/app/downloads
+      # Staging es para importar archivos de musica soltandola en la carpeta
+      - /mnt/externaldisk0/soulsync/Staging:/app/Staging
+      - /mnt/externaldisk0/media/music:/app/Transfer
+      # Use named volume for database persistence (separate from host database)
+      # NOTE: Changed from /app/database to /app/data to avoid overwriting Python package
+      - /mnt/externaldisk0/soulsync/soulsync_database:/app/data
+      # IMPORTANT: Mount host paths that your download/transfer folders live on.
+      # Replace these examples with your actual paths:
+      #   Linux/Mac:  - /path/to/your/downloads:/host/downloads:rw
+      #   WSL:        - /mnt/d/Music:/host/music:rw
+      # You can add as many mounts as needed for your setup.
+      # - /mnt/externaldisk0/media/music:/host/downloads:rw
+      - /mnt/externaldisk0/media/music:/host/transfer:rw
+      # Optional: Mount your music library for Plex/Jellyfin/Navidrome access
+      - /mnt/externaldisk0/media/music:/music:ro
+    extra_hosts:
+      # Allow container to reach host services
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8008/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+# Optional: Add external network for communication with other containers
+networks:
+  default:
+    name: soulsync

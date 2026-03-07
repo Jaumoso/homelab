@@ -12,7 +12,8 @@ services:
       #- SLSKD_SHARED_DIR=/music
     volumes:
       - /mnt/externaldisk0/slskd:/app:rw
-      - /mnt/externaldisk0/media/music:/data/downloads:rw
+      - /mnt/externaldisk0/media/music:/data/share:rw
+      - /mnt/externaldisk0/media/downloads/music:/data/downloads:rw
       - /mnt/externaldisk0/slskd/incomplete:/data/incomplete:rw
     restart: unless-stopped
 networks: {}
