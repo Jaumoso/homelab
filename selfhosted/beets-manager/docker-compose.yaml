@@ -1,0 +1,11 @@
+services:
+  beets-manager:
+    build: .
+    container_name: beets-manager
+    restart: unless-stopped
+    ports:
+      - "5555:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - BEETS_CONTAINER=beets

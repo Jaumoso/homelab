@@ -8,7 +8,7 @@ services:
     ports:
       - 7506:8080
     volumes:
-      - /mnt/externaldisk0/searxng:/etc/searxng:rw
+      - /home/jaumoso/selfhosted/searxng/searxng:/etc/searxng:rw
     environment:
       - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
       - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}

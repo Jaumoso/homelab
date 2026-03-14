@@ -1,0 +1,13 @@
+services:
+  picard:
+    image: ghcr.io/jaumoso/docker-picard:latest
+    # build: .  # uncomment to build locally
+    container_name: picard
+    ports:
+      - "6080:6080"
+    volumes:
+      - ./config:/config
+      - /mnt/externaldisk0/media/music:/music
+    environment:
+      - RESOLUTION=1920x1080x24
+    restart: unless-stopped

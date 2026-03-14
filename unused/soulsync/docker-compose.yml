@@ -48,6 +48,8 @@ services:
       # Allow container to reach host services
       - host.docker.internal:host-gateway
     restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
     healthcheck:
       test:
         - CMD
