@@ -15,19 +15,26 @@ services:
       - OG_TITLE=Jaume C
       - OG_DESCRIPTION=The home of Jaume C
       - OG_URL=https://jaumoso.ovh
-      - OG_IMAGE=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
+      - OG_IMAGE=https://avatars.githubusercontent.com/Jaumoso?v=4
       - OG_IMAGE_WIDTH=400
       - OG_IMAGE_HEIGHT=400
-      - GA_TRACKING_ID=G-XXXXXXXXXX
+      #- GA_TRACKING_ID=G-XXXXXXXXXX
       - THEME=Dark
-      - FAVICON_URL=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
-      - AVATAR_URL=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
-      - AVATAR_2X_URL=https://instagram.fvlc6-2.fna.fbcdn.net/v/t51.82787-15/581190095_18552366814055023_3821794766503457139_n.jpg
+      - FAVICON_URL=https://avatars.githubusercontent.com/Jaumoso?v=4
+      - AVATAR_URL=https://avatars.githubusercontent.com/Jaumoso?v=4
+      - AVATAR_2X_URL=https://avatars.githubusercontent.com/Jaumoso?v=4
       - AVATAR_ALT=Jaume C Profile Pic
       - NAME=Jaume C
-      #- BIO=Software Engineer | Gamer | Twitch Streamer | Content Creator on YouTube | Homelab | 🇺🇸 🇯🇵 | Full Nerd
+      - BIO=Homelab, automatización y self-hosting
       # use ENV variable names for order, listed buttons will be boosted to the top
-      - BUTTON_ORDER=INSTAGRAM,DISCORD,GITHUB,SPOTIFY,STEAM,GOODREADS
+      - BUTTON_ORDER=PANGOLIN_ACCESS,INSTAGRAM,DISCORD,GITHUB,SPOTIFY,STEAM,GOODREADS
+      - CUSTOM_BUTTON_TEXT=Solicitar acceso
+      - CUSTOM_BUTTON_URL=https://pangolin.jaumoso.ovh
+      - CUSTOM_BUTTON_COLOR=#1f2937
+      - CUSTOM_BUTTON_TEXT_COLOR=#f9fafb
+      - CUSTOM_BUTTON_ALT_TEXT=Acceso a servicios via Pangolin
+      - CUSTOM_BUTTON_NAME=PANGOLIN_ACCESS
+      - CUSTOM_BUTTON_ICON=fas fa-shield-halved
       # you can render an unlimited amount of custom buttons by adding 
       # the CUSTOM_BUTTON_* variables and by using a comma as a separator.
       #- CUSTOM_BUTTON_TEXT=Documentation,Recommended Gear
