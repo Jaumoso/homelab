@@ -48,7 +48,7 @@ services:
       - immich
   redis:
     container_name: immich_redis
-    image: docker.io/valkey/valkey:8@sha256:81db6d39e1bba3b3ff32bd3a1b19a6d69690f94a3954ec131277b9a26b95b3aa
+    image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
     restart: unless-stopped
     environment:
       - PUID=1000
@@ -73,7 +73,10 @@ services:
       PGID: 1000
     volumes:
       - /mnt/externaldisk0/immich/pgdata:/var/lib/postgresql/data
+    shm_size: 128mb
     restart: unless-stopped
+    healthcheck:
+      disable: false
     labels:
       - com.centurylinklabs.watchtower.enable=false
     networks:
