@@ -5,9 +5,11 @@ services:
     restart: unless-stopped
     user: 1000:1000
     environment:
-      - SOURCE_DIRS=/source/WhatsappImages,/source/WhatsappVideo,/source/Camera, /source/Screenshots # Add more if needed, comma separated
+      - SOURCE_DIRS=/source/WhatsappImages,/source/WhatsappVideo,/source/Camera,
+        /source/Screenshots # Add more if needed, comma separated
       - TARGET_BASE=/target
       - IGNORE_FILES=.*,*trashed*
+      - REQUIRE_DATE_DIRS=/source/WhatsappImages,/source/WhatsappVideo
     volumes:
       ## Source - Add more if needed
       - /mnt/externaldisk1/sync/Whatsapp Images:/source/WhatsappImages:ro
