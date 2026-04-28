@@ -19,6 +19,7 @@ services:
   backend:
     image: ghcr.io/jaumoso/kalenda-backend:${APP_TAG:-latest}
     container_name: kalenda-backend
+    user: 1000:1000
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-kalenda}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-kalenda}?schema=public
       - NODE_ENV=production
@@ -28,6 +29,8 @@ services:
       - EXPORT_PATH=/data/exports
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@kalenda.app}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - FRONTEND_URL=http://backend:3000
+      - PUPPETEER_URL=http://puppeteer:4000
     ports:
       - 3546:3000
     volumes:
@@ -38,14 +41,16 @@ services:
     restart: unless-stopped
   puppeteer:
     image: ghcr.io/jaumoso/kalenda-puppeteer:${APP_TAG:-latest}
+    user: 1000:1000
     environment:
       - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
       - FRONTEND_URL=http://backend:3000
     ports:
       - 4000:4000
     volumes:
-      - /mnt/externaldisk0/kalenda/exports:/data/exports
+      - /mnt/externaldisk0/kalenda/data/exports:/data/exports
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     restart: unless-stopped
 networks: {}
