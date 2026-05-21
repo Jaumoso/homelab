@@ -1,0 +1,40 @@
+services:
+  SnapOtter:
+    image: snapotter/snapotter:latest
+    container_name: SnapOtter
+    ports:
+      - "1349:1349"
+    volumes:
+      - /mnt/externaldisk0/snapOtter/SnapOtter-data:/data
+      - /mnt/externaldisk0/snapOtter/SnapOtter-workspace:/tmp/workspace  # Temp processing files (can be tmpfs)
+    environment:
+      # --- Authentication ---
+      - AUTH_ENABLED=true          # Set to false to disable login entirely
+      - DEFAULT_USERNAME=${DEFAULT_USERNAME}     # First-run admin username
+      - DEFAULT_PASSWORD=${DEFAULT_PASSWORD}     # First-run admin password (you'll be forced to change it)
+
+      # --- Limits (0 = unlimited) ---
+      # - MAX_UPLOAD_SIZE_MB=0     # Per-file upload limit in MB
+      # - MAX_BATCH_SIZE=0         # Max files per batch request
+      # - RATE_LIMIT_PER_MIN=0     # API rate limit (0 = disabled, 100 = recommended for public)
+      # - MAX_USERS=0              # Max user accounts
+
+      # --- Networking ---
+      # - TRUST_PROXY=true         # Trust X-Forwarded-For headers (set false if not behind a proxy)
+
+      # --- Bind mount permissions ---
+      - PUID=1000                # Match your host user's UID (run: id -u)
+      - PGID=1000                # Match your host user's GID (run: id -g)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1349/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    shm_size: "2gb"            # Needed for Python ML shared memory
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

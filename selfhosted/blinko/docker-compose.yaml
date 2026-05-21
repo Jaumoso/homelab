@@ -1,0 +1,56 @@
+services:
+  blinko-website:
+    container_name: blinko-website
+    image: blinkospace/blinko:latest
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_URL: http://localhost:1111
+      NEXT_PUBLIC_BASE_URL: http://localhost:1111
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - 1111:1111
+    volumes:
+      - /mnt/externaldisk0/blinko/app:/app/.blinko
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://blinko-website:1111/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - blinko-network
+
+  postgres:
+    image: postgres:14
+    container_name: blinko-postgres
+    restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Europe/Madrid
+    volumes:
+      - /mnt/externaldisk0/blinko/db:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - blinko-network
+
+networks:
+  blinko-network:
+    driver: bridge

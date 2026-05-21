@@ -8,8 +8,9 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - /home/jaumoso/selfhosted/bazarr/config:/config
-      - /mnt/externaldisk0/media/movies
-      - /mnt/externaldisk0/media/series:/tv
+      #- /mnt/externaldisk0/media/movies
+      #- /mnt/externaldisk0/media/series:/tv
+      - /mnt/externaldisk0/media:/media
     ports:
       - 6767:6767
     restart: unless-stopped
