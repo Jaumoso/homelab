@@ -1,10 +1,10 @@
 services:
   scrutiny:
-    image: ghcr.io/analogj/scrutiny:master-omnibus
+    image: ghcr.io/analogj/scrutiny:latest-omnibus
     container_name: scrutiny
     restart: unless-stopped
     devices:
-      - /dev/sdb
+      - /dev/sdd
       - /dev/sda
       - /dev/nvme0
     cap_add:

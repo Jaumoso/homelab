@@ -9,6 +9,7 @@ services:
       - 4533:4533
     environment:
       - ND_LOGLEVEL=warn
+      - ND_LYRICSPRIORITY=nd-lyrics
     volumes:
       - /mnt/externaldisk0/navidrome:/data
       - /mnt/externaldisk0/media/music:/music:ro
