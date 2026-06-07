@@ -27,14 +27,14 @@ services:
       - NAME=Jaume C
       # - BIO=Homelab, automatización y self-hosting
       # use ENV variable names for order, listed buttons will be boosted to the top
-      - BUTTON_ORDER=PANGOLIN_ACCESS,INSTAGRAM,DISCORD,GITHUB,SPOTIFY,STEAM,GOODREADS
-      - CUSTOM_BUTTON_TEXT=Solicitar acceso
-      - CUSTOM_BUTTON_URL=https://pangolin.jaumoso.ovh
-      - CUSTOM_BUTTON_COLOR=#1f2937
-      - CUSTOM_BUTTON_TEXT_COLOR=#f9fafb
-      - CUSTOM_BUTTON_ALT_TEXT=Acceso a servicios via Pangolin
-      - CUSTOM_BUTTON_NAME=PANGOLIN_ACCESS
-      - CUSTOM_BUTTON_ICON=fas fa-shield-halved
+      - BUTTON_ORDER=INSTAGRAM,DISCORD,GITHUB,SPOTIFY,STEAM,GOODREADS
+      #- CUSTOM_BUTTON_TEXT=Solicitar acceso
+      #- CUSTOM_BUTTON_URL=https://pangolin.jaumoso.ovh
+      #- CUSTOM_BUTTON_COLOR=#1f2937
+      #- CUSTOM_BUTTON_TEXT_COLOR=#f9fafb
+      #- CUSTOM_BUTTON_ALT_TEXT=Acceso a servicios via Pangolin
+      #- CUSTOM_BUTTON_NAME=PANGOLIN_ACCESS
+      #- CUSTOM_BUTTON_ICON=fas fa-shield-halved
       # you can render an unlimited amount of custom buttons by adding 
       # the CUSTOM_BUTTON_* variables and by using a comma as a separator.
       #- CUSTOM_BUTTON_TEXT=Documentation,Recommended Gear
