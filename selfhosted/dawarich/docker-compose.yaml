@@ -2,6 +2,34 @@
 # password: password
 networks:
   dawarich: null
+
+x-common-env-vars: &a1
+  RAILS_ENV: ${RAILS_ENV:-production}
+  REDIS_URL: redis://dawarich_redis:6379
+  DATABASE_HOST: dawarich_db
+  DATABASE_USERNAME: ${POSTGRES_USER}
+  DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+  DATABASE_NAME: ${POSTGRES_DB}
+  APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab
+  APPLICATION_PROTOCOL: http
+  DISTANCE_UNIT: km
+  TIME_ZONE: "Europe/Madrid"
+  PROMETHEUS_EXPORTER_ENABLED: "false"
+  PROMETHEUS_EXPORTER_HOST: dawarich_app
+  PROMETHEUS_EXPORTER_PORT: 9394
+  SELF_HOSTED: "true"
+  STORE_GEODATA: "true"
+  GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
+  DOMAIN: dawarich.jaumoso.ovh
+  SMTP_SERVER: ${SMTP_SERVER}
+  SMTP_PORT: ${SMTP_PORT}
+  SMTP_USERNAME: ${SMTP_USERNAME}
+  SMTP_PASSWORD: ${SMTP_PASSWORD}
+  SMTP_FROM: ${SMTP_FROM}
+  SMTP_AUTHENTICATION: "plain"
+  SMTP_STARTTLS: "true"
+  SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+
 services:
   dawarich_redis:
     image: redis:7.4-alpine
@@ -74,33 +102,8 @@ services:
       - "::"
     restart: on-failure
     environment:
-      DISABLE_TELEMETRY: true
-      RAILS_ENV: ${RAILS_ENV:-production}
-      REDIS_URL: redis://dawarich_redis:6379
-      DATABASE_HOST: dawarich_db
-      DATABASE_USERNAME: ${POSTGRES_USER}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASE_NAME: ${POSTGRES_DB}
+      <<: *a1
       MIN_MINUTES_SPENT_IN_CITY: 60
-      APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab
-      TIME_ZONE: Europe/Madrid
-      APPLICATION_PROTOCOL: http
-      DISTANCE_UNIT: km
-      PROMETHEUS_EXPORTER_ENABLED: "false"
-      PROMETHEUS_EXPORTER_HOST: 0.0.0.0
-      PROMETHEUS_EXPORTER_PORT: 9394 # try: https://dawarich.app/docs/tutorials/telemetry
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      SELF_HOSTED: "true"
-      STORE_GEODATA: "true"
-      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
-      DOMAIN: dawarich.jaumoso.ovh
-      SMTP_SERVER: ${SMTP_SERVER}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM}
-      SMTP_AUTHENTICATION: "plain"
-      SMTP_STARTTLS: "true"
     logging:
       driver: json-file
       options:
@@ -145,33 +148,8 @@ services:
       - sidekiq
     restart: on-failure
     environment:
-      RAILS_ENV: production
-      REDIS_URL: redis://dawarich_redis:6379
-      DATABASE_HOST: dawarich_db
-      DATABASE_USERNAME: ${POSTGRES_USER}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASE_NAME: ${POSTGRES_DB}
-      APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab
+      <<: *a1
       BACKGROUND_PROCESSING_CONCURRENCY: 10
-      APPLICATION_PROTOCOL: http
-      DISTANCE_UNIT: km
-      TIME_ZONE: "Europe/Madrid"
-      PROMETHEUS_EXPORTER_ENABLED: "false"
-      PROMETHEUS_EXPORTER_HOST: dawarich_app
-      PROMETHEUS_EXPORTER_PORT: 9394
-      ENABLE_TELEMETRY: false # More on telemetry: https://dawarich.app/docs/tutorials/telemetry
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      SELF_HOSTED: "true"
-      STORE_GEODATA: "true"
-      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
-      DOMAIN: dawarich.jaumoso.ovh
-      SMTP_SERVER: ${SMTP_SERVER}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM}
-      SMTP_AUTHENTICATION: "plain"
-      SMTP_STARTTLS: "true"
     logging:
       driver: json-file
       options:
