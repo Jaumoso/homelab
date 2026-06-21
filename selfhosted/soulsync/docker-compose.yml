@@ -31,7 +31,7 @@ services:
       - /mnt/externaldisk0/media/downloads/music:/app/downloads
       # Staging es para importar archivos de musica soltandola en la carpeta
       - /mnt/externaldisk0/soulsync/Staging:/app/Staging
-      - /mnt/externaldisk0/media/music:/app/Transfer
+      #- /mnt/externaldisk0/media/music:/app/Transfer
       # Use named volume for database persistence (separate from host database)
       # NOTE: Changed from /app/database to /app/data to avoid overwriting Python package
       - /mnt/externaldisk0/soulsync/soulsync_database:/app/data
@@ -41,7 +41,7 @@ services:
       #   WSL:        - /mnt/d/Music:/host/music:rw
       # You can add as many mounts as needed for your setup.
       # - /mnt/externaldisk0/media/music:/host/downloads:rw
-      - /mnt/externaldisk0/media/music:/host/transfer:rw
+      - /mnt/externaldisk0/media/music:/app/Transfer:rw
       # Optional: Mount your music library for Plex/Jellyfin/Navidrome access
       - /mnt/externaldisk0/media/music:/music:ro
     extra_hosts:
