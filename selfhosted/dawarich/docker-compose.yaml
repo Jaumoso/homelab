@@ -2,7 +2,6 @@
 # password: password
 networks:
   dawarich: null
-
 x-common-env-vars: &a1
   RAILS_ENV: ${RAILS_ENV:-production}
   REDIS_URL: redis://dawarich_redis:6379
@@ -10,10 +9,10 @@ x-common-env-vars: &a1
   DATABASE_USERNAME: ${POSTGRES_USER}
   DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
   DATABASE_NAME: ${POSTGRES_DB}
-  APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab
+  APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab,192.168.1.20
   APPLICATION_PROTOCOL: http
   DISTANCE_UNIT: km
-  TIME_ZONE: "Europe/Madrid"
+  TIME_ZONE: Europe/Madrid
   PROMETHEUS_EXPORTER_ENABLED: "false"
   PROMETHEUS_EXPORTER_HOST: dawarich_app
   PROMETHEUS_EXPORTER_PORT: 9394
@@ -26,9 +25,11 @@ x-common-env-vars: &a1
   SMTP_USERNAME: ${SMTP_USERNAME}
   SMTP_PASSWORD: ${SMTP_PASSWORD}
   SMTP_FROM: ${SMTP_FROM}
-  SMTP_AUTHENTICATION: "plain"
+  SMTP_AUTHENTICATION: plain
   SMTP_STARTTLS: "true"
   SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+#  PUID: "1000"
+#  PGID: "1000"
 
 services:
   dawarich_redis:

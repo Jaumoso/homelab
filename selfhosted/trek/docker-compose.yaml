@@ -3,14 +3,28 @@ services:
   app:
     image: mauriceboe/trek:latest
     container_name: trek
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
     ports:
       - 6790:6790
     environment:
       - NODE_ENV=production
+      - TZ=Europe/Madrid
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - TRUST_PROXY=1
       - JWT_SECRET=${JWT_SECRET:-}
-      - ALLOWED_ORIGINS=https://trek.jaumoso.ovh, http://192.168.1.20 # Optional: restrict CORS to specific origins
+      - ALLOWED_ORIGINS=https://trek.jaumoso.ovh, http://192.168.1.20, https://pangolin.jaumoso.ovh # Optional: restrict CORS to specific origins
       - PORT=6790
       - ALLOW_INTERNAL_NETWORK=true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=128m
     volumes:
       - /mnt/externaldisk0/trek/data:/app/data
       - /mnt/externaldisk0/trek/uploads:/app/uploads

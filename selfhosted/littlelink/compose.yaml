@@ -10,6 +10,7 @@ services:
       - META_AUTHOR=Jaume C
       #- META_KEYWORDS=HomeLab, HTML, CSS, Engineering
       - LANG=es
+      - SKIP_HEALTH_CHECK_LOGS=true
       - META_INDEX_STATUS=all
       - OG_SITE_NAME=Jaume C
       - OG_TITLE=Jaume C
@@ -19,6 +20,9 @@ services:
       - OG_IMAGE_WIDTH=400
       - OG_IMAGE_HEIGHT=400
       #- GA_TRACKING_ID=G-XXXXXXXXXX
+      - UMAMI_WEBSITE_ID=bd86ee0f-d7c8-4fe8-bdb0-6a408a73727a
+      - UMAMI_APP_URL=https://umami.jaumoso.ovh
+      - UMAMI_SCRIPT_NAME=script.js
       - THEME=Dark
       - FAVICON_URL=https://avatars.githubusercontent.com/Jaumoso?v=4
       - AVATAR_URL=https://avatars.githubusercontent.com/Jaumoso?v=4
