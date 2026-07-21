@@ -10,6 +10,7 @@ services:
       - FILEBROWSER_ADMIN_PASSWORD=${FILEBROWSER_ADMIN_PASSWORD}
 #      - FILEBROWSER_ONLYOFFICE_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
       - FILEBROWSER_CONFIG=/home/filebrowser/config.yaml
+      - FILEBROWSER_DATABASE=/home/filebrowser/database/database.db
     volumes:
 #      - /mnt:/srv # your data source
       - /mnt/externaldisk0:/mnt/externaldisk0
@@ -18,8 +19,9 @@ services:
       - /home/jaumoso/selfhosted/filebrowser/config.yaml:/home/filebrowser/config.yaml:ro
       - /mnt/externaldisk0/filebrowser/data:/home/filebrowser/data
       - /mnt/externaldisk0/filebrowser/db:/home/filebrowser/database
-      - /mnt/externaldisk0/filebrowser/tmp:/home/filebrowser/tmp
-
+# Esta TMP es muy lenta (HDD)
+#      - /mnt/externaldisk0/filebrowser/tmp:/home/filebrowser/tmp
+      - /tmp
   onlyoffice:
     container_name: onlyoffice
     image: onlyoffice/documentserver

@@ -54,6 +54,7 @@ services:
       - SPOTIFY=https://open.spotify.com/user/jaumoso23
       - STEAM=https://steamcommunity.com/id/jaumec/
       - GOODREADS=https://www.goodreads.com/user/show/112380807-jaume
+      - STRAVA=https://www.strava.com/athletes/jaumoso
       #- FOOTER=Jaume C © 2026
     ports:
       - 9485:3000
