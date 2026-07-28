@@ -1,3 +1,4 @@
+name: bichon
 services:
   bichon:
     container_name: bichon
@@ -11,4 +12,3 @@ services:
       - BICHON_ROOT_DIR=/data
       - BICHON_CORS_ORIGINS=https://bichon.jaumoso.ovh
     restart: unless-stopped
-networks: {}

@@ -21,7 +21,7 @@ services:
     healthcheck:
       disable: false
     labels:
-      - com.centurylinklabs.watchtower.enable=false
+      - dockhand.update=false
     networks:
       - immich
   immich-machine-learning:
@@ -41,7 +41,7 @@ services:
       - PGID=1000
     restart: unless-stopped
     labels:
-      - com.centurylinklabs.watchtower.enable=false
+      - dockhand.update=false
     healthcheck:
       disable: false
     networks:
@@ -54,7 +54,7 @@ services:
       - PUID=1000
       - PGID=1000
     labels:
-      - com.centurylinklabs.watchtower.enable=false
+      - dockhand.update=false
     healthcheck:
       test: redis-cli ping || exit 1
     networks:
@@ -78,7 +78,7 @@ services:
     healthcheck:
       disable: false
     labels:
-      - com.centurylinklabs.watchtower.enable=false
+      - dockhand.update=false
     networks:
       - immich
 networks:

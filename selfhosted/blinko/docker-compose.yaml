@@ -1,3 +1,4 @@
+name: blinko
 services:
   blinko-website:
     container_name: blinko-website
@@ -34,7 +35,7 @@ services:
     container_name: blinko-postgres
     restart: unless-stopped
     labels:
-      - com.centurylinklabs.watchtower.enable=false
+      - dockhand.update=false
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -54,3 +55,4 @@ services:
 networks:
   blinko-network:
     driver: bridge
+    name: blinko

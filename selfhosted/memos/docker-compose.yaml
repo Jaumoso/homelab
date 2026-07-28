@@ -1,3 +1,4 @@
+name: memos
 services:
   memos:
     image: neosmemo/memos:stable
@@ -16,5 +17,7 @@ services:
       - MEMOS_MAX_FILE_SIZE=10485760
     restart: unless-stopped
     labels:
-      - com.centurylinklabs.watchtower.enable=false
-networks: {}
+      - dockhand.update=false
+networks:
+  memos:
+    name: memos

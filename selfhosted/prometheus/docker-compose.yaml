@@ -46,6 +46,13 @@ services:
       - /:/rootfs:ro,rslave
     security_opt:
       - apparmor=unconfined
+  smartctl-exporter:
+    image: prometheuscommunity/smartctl-exporter:latest
+    privileged: true
+    user: root
+    network_mode: host
+    ports:
+      - 9633
 networks:
   prometheus:
     external: true

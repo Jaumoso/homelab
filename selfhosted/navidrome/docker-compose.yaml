@@ -1,3 +1,4 @@
+name: navidrome
 services:
   navidrome:
     container_name: navidrome
@@ -13,4 +14,6 @@ services:
     volumes:
       - /mnt/externaldisk0/navidrome:/data
       - /mnt/externaldisk0/media/music:/music:ro
-networks: {}
+networks: 
+  navidrome:
+    name: navidrome

@@ -10,4 +10,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /mnt/externaldisk0/dockhand:/app/data
       - /home/jaumoso/selfhosted:/stacks
-networks: {}
+networks:
+  dockhand:
+    name: dockhand
