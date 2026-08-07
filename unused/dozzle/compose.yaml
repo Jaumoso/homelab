@@ -1,0 +1,9 @@
+services:
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/externaldisk0/dozzle:/data
+    ports:
+      - 5986:8080

@@ -20,4 +20,4 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      - com.centurylinklabs.watchtower.enable=false
+      - dockhand.update=false

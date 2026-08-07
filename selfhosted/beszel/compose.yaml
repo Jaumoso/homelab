@@ -1,0 +1,45 @@
+services:
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
+    restart: unless-stopped
+    environment:
+      APP_URL: https://beszel.jaumoso.ovh
+    ports:
+      - 8090:8090
+    volumes:
+      - /mnt/externaldisk0/beszel/beszel_data:/beszel_data
+      - /mnt/externaldisk0/beszel/beszel_socket:/beszel_socket
+    healthcheck:
+      test: ['CMD', '/beszel', 'health', '--url', 'http://localhost:8090']
+      interval: 120s
+      start_period: 10s
+      timeout: 5s
+
+  beszel-agent:
+    image: henrygd/beszel-agent:alpine
+    container_name: beszel-agent
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    volumes:
+      - /mnt/externaldisk0/beszel/beszel_agent_data:/var/lib/beszel-agent
+      - /mnt/externaldisk0/beszel/beszel_socket:/beszel_socket
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro # systemd service monitoring
+      - /var/run/systemd/private:/var/run/systemd/private:ro  # systemd service monitoring
+    environment:
+      LISTEN: /beszel_socket/beszel.sock
+      HUB_URL: http://localhost:8090
+      TOKEN: ${TOKEN}
+      KEY: "${KEY}"
+    devices:
+      - /dev/sda:/dev/sda
+      - /dev/sdd:/dev/sdd
+      - /dev/nvme0:/dev/nvme0
+    cap_add:
+      - SYS_RAWIO # required for S.M.A.R.T. data
+      - SYS_ADMIN # required for NVMe S.M.A.R.T. data
+    healthcheck:
+     test: ['CMD', '/agent', 'health']
+     interval: 120s
