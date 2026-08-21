@@ -6,7 +6,7 @@ services:
     volumes:
       - ${UPLOAD_LOCATION}:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
-      - /mnt/externaldisk1/sync/Recuerdos:/mnt/Recuerdos:ro
+      - /mnt/externaldisk1/sync/Recuerdos:/mnt/Recuerdos # Añadir :ro para que no toque nada
     env_file:
       - .env
     environment:
