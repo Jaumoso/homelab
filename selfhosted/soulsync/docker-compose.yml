@@ -43,7 +43,7 @@ services:
       # - /mnt/externaldisk0/media/music:/host/downloads:rw
       - /mnt/externaldisk0/media/music:/app/Transfer:rw
       # Optional: Mount your music library for Plex/Jellyfin/Navidrome access
-      - /mnt/externaldisk0/media/music:/music:ro
+      - /mnt/externaldisk0/media/music:/music
     extra_hosts:
       # Allow container to reach host services
       - host.docker.internal:host-gateway
