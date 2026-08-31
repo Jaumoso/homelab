@@ -9,6 +9,7 @@ services:
       - ./config:/config
       - /mnt/externaldisk0/media/music:/music
       - /mnt/externaldisk0/media/downloads/music:/downloads
+      - /mnt/externaldisk0/soulsync/Staging:/Staging
     environment:
       - RESOLUTION=1920x1080x24
     restart: unless-stopped
