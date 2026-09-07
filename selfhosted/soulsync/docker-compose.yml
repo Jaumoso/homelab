@@ -40,7 +40,7 @@ services:
       #   Linux/Mac:  - /path/to/your/downloads:/host/downloads:rw
       #   WSL:        - /mnt/d/Music:/host/music:rw
       # You can add as many mounts as needed for your setup.
-      # - /mnt/externaldisk0/media/music:/host/downloads:rw
+      - /mnt/externaldisk0/media/downloads/music:/host/downloads:rw
       - /mnt/externaldisk0/media/music:/app/Transfer:rw
       # Optional: Mount your music library for Plex/Jellyfin/Navidrome access
       - /mnt/externaldisk0/media/music:/music
