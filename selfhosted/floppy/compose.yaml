@@ -1,0 +1,40 @@
+services:
+  floppy:
+    container_name: floppy
+    # Image defaults to :latest tag (latest commit on the latest branch)
+    # Use :release or :vX.X.X for stable builds from the release branch/GitHub Releases
+    image: ghcr.io/dannyvfilms/floppy:release
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - TZ=Europe/Madrid
+      - SECRET=${SECRET}
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_ENABLED=False
+      - DEBUG=False
+    volumes:
+      - /mnt/externaldisk0/floppy/db:/floppy/db
+      - /mnt/externaldisk0/floppy/backups:/floppy/backups
+    ports:
+      - "8570:8000"
+    networks:
+      - floppy-net
+
+  redis:
+    container_name: floppy-redis
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --save "" --maxmemory 256mb --maxmemory-policy volatile-lru
+    volumes:
+      - /mnt/externaldisk0/floppy/redis_data:/data
+    networks:
+      - floppy-net
+
+volumes:
+  redis_data:
+
+
+networks:
+  floppy-net:
+    driver: bridge
