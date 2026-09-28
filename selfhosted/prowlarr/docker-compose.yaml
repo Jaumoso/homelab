@@ -24,6 +24,7 @@ services:
       - LOG_LEVEL=warn
       - LOG_HTML=false
       - CAPTCHA_SOLVER=none
+      - DISABLE_MEDIA=true
       - TZ=Europe/Madrid
     ports:
       - 8191:8191
