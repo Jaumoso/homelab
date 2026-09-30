@@ -7,15 +7,15 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
       - WEBUI_PORT=8098
-      - TORRENTING_PORT=6887
+      - TORRENTING_PORT=51413
     volumes:
       - ./config:/config
       # - /mnt/externaldisk0/media/default:/downloads
       - /mnt/externaldisk0/media:/media
     ports:
       - 8098:8098
-      - 6887:6887
-      - 6887:6887/udp
+      - 51413:51413
+      - 51413:51413/udp
     restart: unless-stopped
     networks:
       - jellyfin

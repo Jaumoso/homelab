@@ -80,11 +80,11 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: ${DB_CPU_LIMIT:-0.75}
-          memory: ${DB_MEMORY_LIMIT:-1G}
+    #deploy:
+    #  resources:
+    #    limits:
+    #      cpus: ${DB_CPU_LIMIT:-0.75}
+    #      memory: ${DB_MEMORY_LIMIT:-1G}
     labels:
       - dockhand.update=false
   dawarich_app:
@@ -182,10 +182,10 @@ services:
       dawarich_app:
         condition: service_healthy
         restart: true
-    deploy:
-      resources:
-        limits:
-          cpus: ${SIDEKIQ_CPU_LIMIT:-0.50}
-          memory: ${SIDEKIQ_MEMORY_LIMIT:-2G}
+    #deploy:
+    #  resources:
+    #    limits:
+    #      cpus: ${SIDEKIQ_CPU_LIMIT:-0.50}
+    #      memory: ${SIDEKIQ_MEMORY_LIMIT:-2G}
     labels:
       - dockhand.update=false

@@ -13,6 +13,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - ADMIN_ENABLED=False
       - DEBUG=False
+      - FLOPPY_RESOURCE_TIER=minimal
     volumes:
       - /mnt/externaldisk0/floppy/db:/floppy/db
       - /mnt/externaldisk0/floppy/backups:/floppy/backups
