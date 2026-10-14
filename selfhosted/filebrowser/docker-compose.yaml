@@ -10,7 +10,7 @@ services:
       - FILEBROWSER_ADMIN_PASSWORD=${FILEBROWSER_ADMIN_PASSWORD}
 #      - FILEBROWSER_ONLYOFFICE_SECRET=${FILEBROWSER_ONLYOFFICE_SECRET}
       - FILEBROWSER_CONFIG=/home/filebrowser/config.yaml
-      - FILEBROWSER_DATABASE=/home/filebrowser/database/database.db
+      #- FILEBROWSER_DATABASE_PATH=/home/filebrowser/database/database.db
     volumes:
 #      - /mnt:/srv # your data source
       - /mnt/externaldisk0:/mnt/externaldisk0
