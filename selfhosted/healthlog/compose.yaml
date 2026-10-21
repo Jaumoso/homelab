@@ -1,0 +1,624 @@
+# HealthLog — two-container stack (app + Postgres 16).
+#
+# First run (clean host):
+#   cp .env.example .env
+#   echo "POSTGRES_PASSWORD=$(openssl rand -hex 32)"   >> .env
+#   echo "ENCRYPTION_KEY=$(openssl rand -hex 32)"       >> .env
+#   echo "API_TOKEN_HMAC_KEY=$(openssl rand -hex 32)"   >> .env
+#   docker compose up -d
+#   # then open http://<host>:3000 — the first registered user becomes admin.
+#
+# LAN / plain-HTTP self-hosts (NAS, homelab, Tailscale): set
+#   SESSION_COOKIE_SECURE=false
+# in .env, otherwise the session cookie carries the `Secure` flag over HTTP
+# and login silently fails. This is the single most common self-host snag.
+# Leave it unset (or true) only when a TLS reverse proxy serves HTTPS.
+#
+# Persistent state lives in exactly one named volume (`pgdata`, Postgres'
+# data dir). The app container is stateless, so a backup of the database is
+# a backup of everything. The optional GeoLite2 databases are either baked
+# into the image at build time or mounted read-only from the host and
+# pointed at with GEOLITE2_DIR — either way they are replaceable, not state.
+
+# Shared web/worker environment. `app` and the optional `app-worker` below
+# both merge this anchor with `<<: *healthlog_env` instead of each keeping
+# their own copy of the list. A hand-copied second list is exactly how the
+# app-worker example drifted before: `app` grew to 62 variables over time
+# while the worker example stayed at 14, missing every SMTP_*, VAPID_*,
+# APNS_*, INSIGHTS_MAX_TOKENS and ALLOW_LOCAL_AI_PRIVATE_HOSTS entry — so a
+# deployed worker (the process that sends notifications and runs the AI
+# jobs) silently couldn't email, push, or send APNs, and had no local-AI
+# host allowlist. One shared block makes that drift structurally
+# impossible. HEALTHLOG_PROCESS_TYPE is the one value that's meant to
+# differ per service and is overridden after the merge.
+x-healthlog-env: &healthlog_env
+  # connection_limit is set explicitly: Prisma's own default is
+  # cpu_count*2+1, which starves the combined web+worker process
+  # (HEALTHLOG_PROCESS_TYPE=all) under background AI/rollup load. Default
+  # 20 suits a small host; raise DB_CONNECTION_LIMIT on a busy one (keep it
+  # below the database's max_connections, leaving headroom for pg-boss,
+  # migrations, and backups). pool_timeout is the seconds a query waits for
+  # a free connection before erroring.
+  DATABASE_URL: "postgresql://healthlog:${POSTGRES_PASSWORD}@db:5432/healthlog?schema=public&connection_limit=${DB_CONNECTION_LIMIT:-20}&pool_timeout=${DB_POOL_TIMEOUT:-20}"
+  NODE_ENV: production
+  # Encryption at rest (AES-256-GCM). Generate each secret with
+  # `openssl rand -hex 32` (a 64-char hex string = 32 bytes). ENCRYPTION_KEY
+  # is the single-key path and is all most self-hosts need. The map form
+  # (ENCRYPTION_KEYS={"v1":"<hex>","v2":"<hex>"} + ENCRYPTION_ACTIVE_KEY_ID=v2)
+  # is for key rotation — see docs/ops/encryption-key-rotation.md. Keep these
+  # values stable and backed up: lose them and the encrypted columns are
+  # unrecoverable.
+  ENCRYPTION_KEY: "${ENCRYPTION_KEY}"
+  ENCRYPTION_KEYS: "${ENCRYPTION_KEYS:-}"
+  ENCRYPTION_ACTIVE_KEY_ID: "${ENCRYPTION_ACTIVE_KEY_ID:-}"
+  API_TOKEN_HMAC_KEY: "${API_TOKEN_HMAC_KEY}"
+  NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+  APP_URL: "${APP_URL:-http://localhost:3000}"
+  # Session-cookie Secure-flag opt-out. SET THIS TO false FOR LAN / plain-HTTP
+  # self-hosts (http://<host>:3000 with no TLS reverse proxy) — otherwise the
+  # session cookie carries the `Secure` flag, the browser drops it over HTTP,
+  # and login silently fails. Unset → the flag tracks NODE_ENV=production
+  # (i.e. on); set to true to force it. Forwarded explicitly so an operator
+  # value in .env reaches the Node process (the `environment:` block is a
+  # whitelist — vars not listed here don't propagate even though
+  # docker-compose reads .env for `${VAR}` substitution at compose-up time).
+  SESSION_COOKIE_SECURE: "${SESSION_COOKIE_SECURE:-}"
+  NATIVE_CANVAS: "${NATIVE_CANVAS:-}"
+  # Read-only showcase instance. DEMO_MODE=true makes the proxy refuse every
+  # mutation except login and paints the demo banner. Leave it unset on a
+  # real self-host — it is a public-demo switch, not a safety belt.
+  DEMO_MODE: "${DEMO_MODE:-}"
+  # Statement timeout applied to every database session, in milliseconds
+  # (default 60000; 0 disables it and restores the unbounded behaviour).
+  # Raise it if a very large account's analytics fallback is being cut off.
+  DATABASE_STATEMENT_TIMEOUT_MS: "${DATABASE_STATEMENT_TIMEOUT_MS:-}"
+  # Postgres work_mem for every app session (default 16MB).
+  DATABASE_WORK_MEM: "${DATABASE_WORK_MEM:-}"
+  # 1 sends neither of the two settings above (they ride the libpq `options`
+  # startup parameter, which PgBouncer refuses by default).
+  DATABASE_SESSION_OPTIONS_DISABLED: "${DATABASE_SESSION_OPTIONS_DISABLED:-}"
+  WITHINGS_WEBHOOK_SECRET: "${WITHINGS_WEBHOOK_SECRET:-}"
+  # Overrides the derived `${NEXT_PUBLIC_APP_URL}/api/withings/callback`;
+  # set it when the URL registered with Withings differs from the app's own
+  # public URL. The WHOOP / Polar / Oura / Strava equivalents are below.
+  WITHINGS_REDIRECT_URI: "${WITHINGS_REDIRECT_URI:-}"
+  # Path-segment + HMAC secret for the Telegram bot webhook. Set it to the
+  # same value you register with BotFather; without it the settings page
+  # cannot install the webhook and inbound updates are refused.
+  TELEGRAM_WEBHOOK_SECRET: "${TELEGRAM_WEBHOOK_SECRET:-}"
+  # v1.18.11 (W3) — client-IP resolution + geo lookup. Behind Cloudflare
+  # the real visitor IP is in `cf-connecting-ip`; set
+  # TRUST_CF_CONNECTING_IP=1 ONLY when Cloudflare is in front (off by
+  # default — a direct-exposed host must not trust a forgeable header).
+  # IP_GEO_LOOKUP_URL overrides the default ipwho.is provider (HTTPS by
+  # default); IP_GEO_LOOKUP_DISABLED=1 stops all third-party IP egress.
+  # IP_GEO_ALLOW_INSECURE=true permits a plain-HTTP provider URL (e.g. the
+  # free ip-api.com endpoint) — off by default, an explicit operator choice.
+  # Listed here so operator values in .env reach the container (the
+  # `environment:` block is a whitelist — vars not listed never propagate).
+  # TRUST_PROXY_HOPS is the number of trusted reverse-proxy hops in front of
+  # the app: the client IP is read that many entries from the right of the
+  # X-Forwarded-For chain. Wrong value and the app refuses to read XFF and
+  # collapses every anonymous caller into one rate-limit bucket. Listed here
+  # so an operator value in .env reaches the container (the `environment:`
+  # block is a whitelist).
+  TRUST_PROXY_HOPS: "${TRUST_PROXY_HOPS:-}"
+  TRUST_CF_CONNECTING_IP: "${TRUST_CF_CONNECTING_IP:-}"
+  IP_GEO_LOOKUP_URL: "${IP_GEO_LOOKUP_URL:-}"
+  IP_GEO_LOOKUP_DISABLED: "${IP_GEO_LOOKUP_DISABLED:-}"
+  IP_GEO_ALLOW_INSECURE: "${IP_GEO_ALLOW_INSECURE:-}"
+  # Outbound requests an operator can turn off (1 / true / yes). Both are on
+  # by default. PASSWORD_BREACH_CHECK_DISABLED stops the HaveIBeenPwned range
+  # query made when a password is set (only the first five characters of the
+  # password's SHA-1 are sent). UPDATE_CHECK_DISABLED stops the daily request
+  # to the GitHub releases API behind the About page and the admin version
+  # tile. Listed here so an operator value in .env reaches the container.
+  PASSWORD_BREACH_CHECK_DISABLED: "${PASSWORD_BREACH_CHECK_DISABLED:-}"
+  UPDATE_CHECK_DISABLED: "${UPDATE_CHECK_DISABLED:-}"
+  # Directory the offline GeoLite2 databases are read from. Default
+  # `/opt/geolite2` — the path the published image bakes its own copy
+  # into, if the build had a MaxMind licence key. Point this at a
+  # directory you mount yourself (see the `volumes:` block below) to
+  # bring your own GeoLite2-City.mmdb + GeoLite2-ASN.mmdb, refreshed
+  # with `geoipupdate` on your own schedule. Listed here so an operator
+  # value in .env reaches the container (the `environment:` block is a
+  # whitelist). See docs/self-hosting/geolite2.md.
+  GEOLITE2_DIR: "${GEOLITE2_DIR:-/opt/geolite2}"
+  # MaxMind licence key for the RUNTIME GeoLite2 fetch (issue #659). Set this
+  # and the worker downloads GeoLite2-City + GeoLite2-ASN itself into
+  # GEOLITE2_DIR on the next boot and monthly thereafter — no image rebuild,
+  # no manual mount. Get a free key at
+  # https://www.maxmind.com/en/geolite2/signup (My Account -> Manage License
+  # Keys). Leave it unset and nothing is fetched (mounting your own databases
+  # or IP_GEO_LOOKUP_DISABLED=1 both still work). Listed here so an operator
+  # value in .env reaches the container (the `environment:` block is a
+  # whitelist). See docs/self-hosting/geolite2.md.
+  MAXMIND_LICENSE_KEY: "${MAXMIND_LICENSE_KEY:-}"
+  # all = bundle web + worker in this container (default, single-host)
+  # web = serve HTTP only; pair with a separate app-worker service
+  HEALTHLOG_PROCESS_TYPE: "${HEALTHLOG_PROCESS_TYPE:-all}"
+  # compose | truenas | coolify | unraid | portainer. Only chooses which
+  # instructions the admin's "Back up your encryption key" step shows first.
+  HEALTHLOG_PLATFORM: "${HEALTHLOG_PLATFORM:-}"
+  # enforce (default) | warn. The start-up encryption key check refuses to
+  # serve when the key does not open the stored data; warn only logs it and
+  # serves anyway. A last resort for a refusal you are certain is false: it
+  # disables a safety check. See docs/self-hosting/getting-started.md.
+  ENCRYPTION_KEY_CHECK: "${ENCRYPTION_KEY_CHECK:-}"
+  BACKUP_ENCRYPTION_KEY: "${BACKUP_ENCRYPTION_KEY:-}"
+  BACKUP_ENCRYPTION_PREVIOUS_KEYS: "${BACKUP_ENCRYPTION_PREVIOUS_KEYS:-}"
+  BACKUP_S3_ENDPOINT: "${BACKUP_S3_ENDPOINT:-}"
+  BACKUP_S3_BUCKET: "${BACKUP_S3_BUCKET:-}"
+  BACKUP_S3_ACCESS_KEY: "${BACKUP_S3_ACCESS_KEY:-}"
+  BACKUP_S3_SECRET_KEY: "${BACKUP_S3_SECRET_KEY:-}"
+  BACKUP_S3_REGION: "${BACKUP_S3_REGION:-auto}"
+  BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS:-30}"
+  # Largest stored backup of one account, in MB of encrypted copy (default
+  # 2048). A storage limit, not a memory one; see .env.production.example.
+  BACKUP_MAX_STORED_MB: "${BACKUP_MAX_STORED_MB:-}"
+  # How long the audit trail is kept, in days. Default 365, floor 7 (a value
+  # below the floor is ignored rather than obeyed, so a window set in seconds
+  # by mistake cannot empty a fresh table). It is not only a retention knob:
+  # the shared-access panel PUBLISHES this number — "who entered what stays
+  # answerable for N days" is on the dialog that ends somebody's access, and
+  # the activity view states the same window. An instance running 90 says 90,
+  # so the var has to actually reach the container. Listed here for the reason
+  # the block exists: `environment:` is a whitelist, and a value in .env that
+  # is not named here never arrives.
+  AUDIT_LOG_RETENTION_DAYS: "${AUDIT_LOG_RETENTION_DAYS:-}"
+  # How long Coach conversations are kept, in days (default 365, floor 30).
+  # Like the audit window this number is PUBLISHED to the user on the Data &
+  # Privacy page, so an instance running 90 has to be able to say 90.
+  COACH_MESSAGE_RETENTION_DAYS: "${COACH_MESSAGE_RETENTION_DAYS:-}"
+  # How long the host CPU/memory samples behind the admin charts are kept,
+  # in days (default 7). Raise it for a longer trend, lower it on a small
+  # disk.
+  HOST_METRIC_RETENTION_DAYS: "${HOST_METRIC_RETENTION_DAYS:-}"
+  # Thinning of dense intraday samples (heart rate, glucose) once they age
+  # out of the detail window. On by default; set "false" to keep every raw
+  # sample forever, at the cost of table growth.
+  DENSE_INTRADAY_RETENTION_ENABLED: "${DENSE_INTRADAY_RETENTION_ENABLED:-}"
+  # Consecutive failures before an integration is reported as persistently
+  # failing and notified about (default 3, minimum 1). Raise it if a flaky
+  # upstream is noisy.
+  INTEGRATION_FAILURE_ALERT_THRESHOLD: "${INTEGRATION_FAILURE_ALERT_THRESHOLD:-}"
+  # Per-export ceiling on MedicationAdministration rows in the FHIR
+  # health-record Bundle. Bounded 1..50000, default 5000. Listed here so
+  # an operator override in .env actually reaches the container (the
+  # `environment:` block is a whitelist).
+  FHIR_MAX_MEDICATION_ADMINISTRATIONS: "${FHIR_MAX_MEDICATION_ADMINISTRATIONS:-}"
+  # WHOOP integration (optional). The app client id/secret are per-user
+  # BYO-keys stored encrypted in the DB, so there is no
+  # WHOOP_CLIENT_ID/SECRET env. WHOOP_WEBHOOK_SECRET is the instance-level
+  # path-segment + HMAC-verification secret for the webhook;
+  # WHOOP_REDIRECT_URI overrides the derived
+  # `${NEXT_PUBLIC_APP_URL}/api/whoop/callback` when the public URL
+  # differs. Listed here so an operator override in .env reaches the
+  # container (the `environment:` block is a whitelist).
+  WHOOP_WEBHOOK_SECRET: "${WHOOP_WEBHOOK_SECRET:-}"
+  WHOOP_REDIRECT_URI: "${WHOOP_REDIRECT_URI:-}"
+  # v1.17.0 (F4) — Polar AccessLink + Oura Cloud OAuth (shared app from
+  # env). Both pairs together enable each connect button; an unset pair
+  # leaves that integration disabled. The optional *_REDIRECT_URI overrides
+  # the derived `${NEXT_PUBLIC_APP_URL}/api/{polar,oura}/callback`. Listed
+  # here so operator values in .env reach the container (the `environment:`
+  # block is a whitelist).
+  POLAR_CLIENT_ID: "${POLAR_CLIENT_ID:-}"
+  POLAR_CLIENT_SECRET: "${POLAR_CLIENT_SECRET:-}"
+  POLAR_REDIRECT_URI: "${POLAR_REDIRECT_URI:-}"
+  OURA_CLIENT_ID: "${OURA_CLIENT_ID:-}"
+  OURA_CLIENT_SECRET: "${OURA_CLIENT_SECRET:-}"
+  OURA_REDIRECT_URI: "${OURA_REDIRECT_URI:-}"
+  # v1.28.x — Strava OAuth (shared app from env; per-user BYO keys override).
+  # Both together enable the connect button; an unset pair leaves it
+  # disabled. STRAVA_REDIRECT_URI overrides the derived
+  # `${NEXT_PUBLIC_APP_URL}/api/strava/callback`. Listed here so operator
+  # values in .env reach the container (the `environment:` block is a
+  # whitelist).
+  STRAVA_CLIENT_ID: "${STRAVA_CLIENT_ID:-}"
+  STRAVA_CLIENT_SECRET: "${STRAVA_CLIENT_SECRET:-}"
+  STRAVA_REDIRECT_URI: "${STRAVA_REDIRECT_URI:-}"
+  # Fitbit + Google Health are per-user BYO-key integrations, so there is no
+  # client id/secret env for either. These override the derived
+  # `${NEXT_PUBLIC_APP_URL}/api/{fitbit,google-health}/callback` when the URL
+  # registered with the provider differs from the app's public URL. Both are
+  # asserted same-origin with NEXT_PUBLIC_APP_URL, so they cannot redirect
+  # the authorization code somewhere else.
+  FITBIT_REDIRECT_URI: "${FITBIT_REDIRECT_URI:-}"
+  GOOGLE_HEALTH_REDIRECT_URI: "${GOOGLE_HEALTH_REDIRECT_URI:-}"
+  # How many years back the Google Health history backfill reads (a whole
+  # number from 1 to 100; 20 when unset). A data type whose history goes
+  # further ends there, and the integration card says so.
+  GOOGLE_HEALTH_BACKFILL_HORIZON_YEARS: "${GOOGLE_HEALTH_BACKFILL_HORIZON_YEARS:-}"
+  # Nightscout origins on your own network that the per-user connection
+  # validator should accept, comma-separated (e.g. "http://nightscout.lan").
+  # Without it a LAN/private Nightscout URL is refused as an SSRF target.
+  NIGHTSCOUT_PRIVATE_ORIGINS: "${NIGHTSCOUT_PRIVATE_ORIGINS:-}"
+  # Dawarich instances on your own network that the movement-context
+  # connection may reach, comma-separated exact origins (e.g.
+  # "http://dawarich.lan:3000"). Without it a LAN/private Dawarich URL is
+  # refused as an SSRF target; a public instance needs nothing here.
+  DAWARICH_PRIVATE_ORIGINS: "${DAWARICH_PRIVATE_ORIGINS:-}"
+  # Webhook (Gotify, Home Assistant, n8n) and ntfy targets on your own
+  # network, comma-separated exact origins (e.g. "https://gotify.example.com,
+  # http://ntfy.lan:8080"). Without it a target that resolves to a private
+  # address is refused at send time as an SSRF target. Link-local, metadata
+  # and unspecified addresses stay refused even when listed. See
+  # docs/self-hosting/notifications.md.
+  NOTIFICATION_PRIVATE_ORIGINS: "${NOTIFICATION_PRIVATE_ORIGINS:-}"
+  # Paperless-ngx and Papra instances the document picker may reach,
+  # comma-separated exact origins (e.g. "https://paperless.example.com,
+  # http://papra.lan:1221"). Unset, the picker is off. Only listed origins are
+  # ever contacted, public or private; redirects are not followed and
+  # link-local, metadata and unspecified addresses stay refused even when
+  # listed. See docs/self-hosting/document-sources.md.
+  DOCUMENT_SOURCE_ORIGINS: "${DOCUMENT_SOURCE_ORIGINS:-}"
+  # Open-Meteo endpoints for the environment/weather correlation. Default to
+  # the hosted service; point them at your own Open-Meteo deployment to keep
+  # the coordinate lookups off a third party.
+  OPENMETEO_BASE_URL: "${OPENMETEO_BASE_URL:-}"
+  OPENMETEO_GEOCODING_URL: "${OPENMETEO_GEOCODING_URL:-}"
+  # Air quality, pollen and UV (CAMS via Open-Meteo). Same hosted default and
+  # self-host option as above; ENVIRONMENT_AIR_QUALITY_DISABLED=1 stops the
+  # air-quality requests for the whole instance.
+  OPENMETEO_AIR_QUALITY_URL: "${OPENMETEO_AIR_QUALITY_URL:-}"
+  ENVIRONMENT_AIR_QUALITY_DISABLED: "${ENVIRONMENT_AIR_QUALITY_DISABLED:-}"
+  # OIDC SSO login (self-hosted IdP: Authentik/Keycloak/Authelia/etc).
+  # All three of ISSUER_URL/CLIENT_ID/CLIENT_SECRET together enable the
+  # "Sign in with SSO" button; set none to leave it disabled. OIDC_ONLY
+  # hides password/passkey login entirely, but only takes effect when
+  # the three above are also fully set — a half-configured group never
+  # locks every user out. It IS enforced server-side, and there is no
+  # OIDC flow for the native iOS client yet — enabling it locks iOS
+  # users out of sign-in entirely. Listed here so operator values in
+  # .env reach the container (the `environment:` block is a whitelist).
+  OIDC_ISSUER_URL: "${OIDC_ISSUER_URL:-}"
+  OIDC_CLIENT_ID: "${OIDC_CLIENT_ID:-}"
+  OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET:-}"
+  OIDC_SCOPES: "${OIDC_SCOPES:-}"
+  OIDC_BUTTON_LABEL: "${OIDC_BUTTON_LABEL:-}"
+  OIDC_ONLY: "${OIDC_ONLY:-}"
+  # Deploy-result webhook (optional). DEPLOY_WEBHOOK_SECRET authenticates
+  # POST /api/internal/deploy-webhook; DEPLOY_LOGS_URL is the
+  # deployment-dashboard URL (e.g. the Coolify UI) linked in
+  # deploy-failure notifications. Listed here so operator values in
+  # .env reach the container (the `environment:` block is a whitelist).
+  DEPLOY_WEBHOOK_SECRET: "${DEPLOY_WEBHOOK_SECRET:-}"
+  DEPLOY_LOGS_URL: "${DEPLOY_LOGS_URL:-}"
+  # Optional replay hardening: when "true", the deploy webhook
+  # requires a fresh X-Deploy-Webhook-Timestamp header (±5 min).
+  # See docs/ops/deploy.md.
+  DEPLOY_WEBHOOK_REQUIRE_TIMESTAMP: "${DEPLOY_WEBHOOK_REQUIRE_TIMESTAMP:-}"
+  # TLS leaf SPKI-change alarm baseline (optional). The native client
+  # pins the served TLS leaf; this is the known-good pin set the monitor
+  # alarms against on a rotation. Comma-separated for the dual-pin
+  # renewal window. Listed here so an operator value in .env reaches the
+  # container (the `environment:` block is a whitelist). See
+  # docs/ops/tls-cert-pin.md.
+  TLS_LEAF_SPKI_PINS: "${TLS_LEAF_SPKI_PINS:-}"
+  # AI endpoints on your own network (optional): a self-hosted Ollama,
+  # LM Studio or LiteLLM gateway, comma-separated exact origins (e.g.
+  # "http://ollama.lan:11434,http://10.0.0.5:4000"). Without it an AI base
+  # URL on a private address is refused. Link-local, metadata and
+  # unspecified addresses stay refused even when listed. See
+  # docs/integrations/ai-providers.md.
+  AI_PRIVATE_ORIGINS: "${AI_PRIVATE_ORIGINS:-}"
+  # Older form of the above, kept for existing installs: an exact host list
+  # (e.g. "ollama.lan,10.0.0.5") still works. "true" is deprecated: it now
+  # covers only the admin AI key and admin accounts' own AI settings, and
+  # will be removed in a later release; move to AI_PRIVATE_ORIGINS.
+  ALLOW_LOCAL_AI_PRIVATE_HOSTS: "${ALLOW_LOCAL_AI_PRIVATE_HOSTS:-}"
+  # Extra hosts the admin-configured AI base URL may point at, on top of the
+  # built-in public providers. Comma-separated bare hostnames. Set it when
+  # you run a gateway this instance should trust; it widens only the admin
+  # setting, never the per-user BYO-key posture.
+  ADMIN_AI_BASE_URL_ALLOWLIST: "${ADMIN_AI_BASE_URL_ALLOWLIST:-}"
+  # Codex (ChatGPT sign-in) model slugs. Set CODEX_MODEL to pin one slug
+  # ahead of the built-in chain, or CODEX_MODEL_FALLBACK_CHAIN (comma-
+  # separated) to replace the chain outright. Reach for these when the
+  # provider rotates a slug and every request starts coming back 503 —
+  # without them a rotation needs a new release to fix.
+  CODEX_MODEL: "${CODEX_MODEL:-}"
+  CODEX_MODEL_FALLBACK_CHAIN: "${CODEX_MODEL_FALLBACK_CHAIN:-}"
+  # Surfaces reviewed n-of-1 experiment outcomes in the Coach snapshot.
+  # Off by default — the read-back is the most overclaim-prone Coach
+  # surface, so it is an explicit operator opt-in. Set to "1" to enable.
+  COACH_EXPERIMENT_VERDICT: "${COACH_EXPERIMENT_VERDICT:-}"
+  # Daily-briefing output-token ceiling (optional; default 2500, clamped
+  # 500-8000). Raise when a verbose model's briefing JSON is cut off.
+  # Listed here so an operator value in .env reaches the container (the
+  # `environment:` block is a whitelist). See docs/integrations/ai-providers.md.
+  INSIGHTS_MAX_TOKENS: "${INSIGHTS_MAX_TOKENS:-}"
+  # Per-user hourly ceiling for POST /api/insights/generate (optional;
+  # default 10). Was documented but missing from this whitelist, so an
+  # operator value never reached the container. See
+  # docs/integrations/ai-providers.md.
+  INSIGHTS_RATE_LIMIT_PER_HOUR: "${INSIGHTS_RATE_LIMIT_PER_HOUR:-}"
+  # Per-user hourly ceiling for the document-AI actions (read/index, extract,
+  # suggest, summarise — one shared bucket; optional; default 6, clamped
+  # 1-1000). Raise on a self-host with a generous provider budget, lower on a
+  # tight one. Listed here so an operator value in .env reaches the container
+  # (the `environment:` block is a whitelist). See
+  # docs/integrations/ai-providers.md.
+  DOCUMENT_AI_LIMIT_PER_HOUR: "${DOCUMENT_AI_LIMIT_PER_HOUR:-}"
+  # Minimum hours between two status-card regenerations after a sync
+  # (optional; default 6, whole hours 1-48; hand entries keep one hour). The
+  # value under Admin > Coach wins. Listed here so an operator value in .env
+  # reaches the container. See docs/integrations/ai-providers.md.
+  AI_SYNC_REGEN_GAP_HOURS: "${AI_SYNC_REGEN_GAP_HOURS:-}"
+  # Hourly upload ceiling for each narrow document-upload token (a Paperless
+  # workflow, the import script; optional; default 120, clamped 1-1000).
+  # Uploads from the web app and the phone keep their own bucket. Listed here
+  # so an operator value in .env reaches the container. See
+  # docs/integrations/document-import.md.
+  DOCUMENT_UPLOAD_LIMIT_PER_HOUR: "${DOCUMENT_UPLOAD_LIMIT_PER_HOUR:-}"
+  # Per-user hourly ceiling for lab-report scans (photo/PDF and browser-OCR
+  # text share one bucket; optional; default 6, clamped 1-1000). A scan that
+  # fails before the provider is called hands its slot back. Listed here so an
+  # operator value in .env reaches the container. See
+  # docs/integrations/ai-providers.md.
+  LABS_OCR_LIMIT_PER_HOUR: "${LABS_OCR_LIMIT_PER_HOUR:-}"
+  # v1.17.1 — SMTP transport for the email notification channel (optional,
+  # all-or-none: HOST + PORT + FROM enable it; USER/PASS optional; SECURE
+  # toggles implicit TLS). Listed here so operator values in .env reach the
+  # container (the `environment:` block is a whitelist — vars not listed
+  # never propagate from .env, even with `${VAR}` substitution at
+  # compose-up). Per-user recipient is stored in the DB, not here.
+  SMTP_HOST: "${SMTP_HOST:-}"
+  SMTP_PORT: "${SMTP_PORT:-}"
+  SMTP_FROM: "${SMTP_FROM:-}"
+  SMTP_USER: "${SMTP_USER:-}"
+  SMTP_PASS: "${SMTP_PASS:-}"
+  SMTP_SECURE: "${SMTP_SECURE:-}"
+  # v1.17.1 — Web Push VAPID keys (optional). The admin Settings panel stores
+  # these in the DB (the supported path); these env vars are the fallback the
+  # loader reads when the DB pair is unset. Listed here so the documented env
+  # path reaches the container under the bundled compose. See
+  # docs/self-hosting/notifications.md.
+  VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
+  VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
+  VAPID_SUBJECT: "${VAPID_SUBJECT:-}"
+  # APNs for a self-hosted native iOS build (optional, env-only — no admin UI
+  # for the .p8). APNS_KEY_B64 is the escape-free base64 form preferred over
+  # APNS_KEY/APNS_KEY_FILE; the key must be scoped "Sandbox & Production".
+  # PWA users need none of this (Web Push covers them). See
+  # docs/self-hosting/notifications.md.
+  APNS_KEY_B64: "${APNS_KEY_B64:-}"
+  # The other two key sources, in precedence order after APNS_KEY_B64:
+  # APNS_KEY is the raw PEM body, APNS_KEY_FILE a path to the .p8 inside the
+  # container (mount it yourself). Both are documented in
+  # .env.production.example and in the manifest check-env reads, and both
+  # were absent from this whitelist — so an operator who followed the
+  # documented precedence chain got a silently disabled APNs.
+  APNS_KEY: "${APNS_KEY:-}"
+  APNS_KEY_FILE: "${APNS_KEY_FILE:-}"
+  APNS_KEY_ID: "${APNS_KEY_ID:-}"
+  APNS_TEAM_ID: "${APNS_TEAM_ID:-}"
+  APNS_BUNDLE_ID: "${APNS_BUNDLE_ID:-}"
+  # Force the production APNs gateway. Normally derived from NODE_ENV; set
+  # "true" when a production-signed build has to reach the production
+  # gateway from a non-production deployment.
+  APNS_PRODUCTION: "${APNS_PRODUCTION:-}"
+  # Set "true" only if your own iOS build carries Apple's Critical Alerts
+  # entitlement; otherwise urgent alerts use the time-sensitive level.
+  APNS_CRITICAL_ENTITLEMENT: "${APNS_CRITICAL_ENTITLEMENT:-}"
+  # Structured logging. LOG_LEVEL is one of debug/info/warn/error (default
+  # info) — drop to debug while chasing a problem, raise to warn on a busy
+  # instance. LOG_SAMPLE_RATE keeps that fraction of successful events
+  # (default 1.0 = all; 0.1 thins a chatty log without losing errors).
+  # LOG_SLOW_THRESHOLD_MS is the duration above which a request is flagged
+  # slow (default 3000). LOG_INCLUDE_STACK="false" strips stack traces from
+  # the emitted events.
+  LOG_LEVEL: "${LOG_LEVEL:-}"
+  LOG_SAMPLE_RATE: "${LOG_SAMPLE_RATE:-}"
+  LOG_SLOW_THRESHOLD_MS: "${LOG_SLOW_THRESHOLD_MS:-}"
+  LOG_INCLUDE_STACK: "${LOG_INCLUDE_STACK:-}"
+  # Heap diagnostics, off by default. HEALTHLOG_HEAP_SNAPSHOT=1 writes ONE
+  # heap snapshot the first time the heap reaches 85 % of its limit, into
+  # HEALTHLOG_DIAG_DIR (default /tmp inside the container). A snapshot holds
+  # decrypted health data and keys: turn it on only to chase a crash, then
+  # delete the file. See docs/ops/heap-diagnostics.md.
+  HEALTHLOG_HEAP_SNAPSHOT: "${HEALTHLOG_HEAP_SNAPSHOT:-}"
+  HEALTHLOG_DIAG_DIR: "${HEALTHLOG_DIAG_DIR:-}"
+  # Optional log shipping to a Loki instance. Set LOKI_ENDPOINT to the base
+  # URL or the full push URL to turn it on; a Loki on your own network works.
+  # The username/password pair is only needed when your Loki is behind basic
+  # auth. Push failures show up as a rate-limited line on stderr. Leave all
+  # three unset and logs stay on stdout for the Docker log driver to rotate.
+  LOKI_ENDPOINT: "${LOKI_ENDPOINT:-}"
+  LOKI_USERNAME: "${LOKI_USERNAME:-}"
+  LOKI_PASSWORD: "${LOKI_PASSWORD:-}"
+  # Server-side prefetch for the dashboard, insights, coach and checkups
+  # pages. On by default; set "false" to fall back to pure client fetching,
+  # which is the escape hatch when a prefetch is misbehaving on your host.
+  DASHBOARD_SSR_PREFETCH: "${DASHBOARD_SSR_PREFETCH:-}"
+
+services:
+  # Single-container default (HEALTHLOG_PROCESS_TYPE=all). Existing
+  # self-host deployments stay working with `docker compose up`.
+  # For horizontal scaling switch to the web/worker split below
+  # (HEALTHLOG_PROCESS_TYPE=web on this service + uncomment app-worker).
+  app:
+    # Tracks the GHCR `:latest` multi-arch image by default.
+    # `pull_policy: always` is the load-bearing line — without it,
+    # Docker keeps a stale `:latest` digest cached on the host and
+    # skips the registry round-trip on `compose up`, which is what kept
+    # Coolify re-deploying the previous image after every tag push.
+    # With pull_policy=always the compose-up always re-checks the
+    # registry digest and pulls when GHCR has a fresher manifest.
+    #
+    # HEALTHLOG_IMAGE_REF pins the image deterministically without
+    # editing this file: set it in the compose `.env` (or the Coolify
+    # env vars) to `:vX.Y.Z` for a tag or `@sha256:<digest>` for an
+    # immutable digest reference (see docs/ops/deploy.md, "Digest
+    # pinning"; scripts/promote-digest.ts resolves + verifies the
+    # digest after a release). Unset, everything behaves exactly as
+    # before — `:latest` plus pull_policy.
+    image: ghcr.io/mbombeck/healthlog${HEALTHLOG_IMAGE_REF:-:latest}
+    pull_policy: always
+    container_name: healthlog-app
+    # The app runs as the unprivileged `nextjs` user and never needs a
+    # setuid/setgid escalation; blocking privilege gain caps what a
+    # compromised process inside the container can do. cap_drop removes
+    # every Linux capability on top of that — the process doesn't need any
+    # of them either. read_only:true is deliberately NOT set: the app
+    # writes to a Next.js runtime cache, and turning the filesystem
+    # read-only needs testing against that first, it's a not-yet, not an
+    # oversight.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "3000:3000"
+    environment:
+      <<: *healthlog_env
+    # Bring your own GeoLite2 databases. The published image only carries
+    # MMDBs if the build had a MaxMind licence key, so on `:latest` the
+    # offline tier is usually absent and every login IP goes to the online
+    # provider instead. Create a free MaxMind account, pull
+    # GeoLite2-City.mmdb + GeoLite2-ASN.mmdb with `geoipupdate`, mount the
+    # directory read-only, and uncomment below — the container path here
+    # matches GEOLITE2_DIR's default (/opt/geolite2), so this works as-is
+    # once uncommented. Mounting at a different container path also works,
+    # just also set GEOLITE2_DIR in .env to match it.
+    # Steps: docs/self-hosting/geolite2.md.
+    #
+    # volumes:
+    #   - ./geolite2:/opt/geolite2:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    # Bounded log rotation: the default json-file driver keeps every line
+    # forever, which is exactly what fills the disk on the small NAS /
+    # homelab hosts this file targets. 10m x 3 caps it at 30MB.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Memory ceiling for the app. HEALTHLOG_PROCESS_TYPE=all bundles the
+    # AI/rollup/backup worker into this same process, and unbounded that
+    # workload can grow large enough to starve Postgres on a shared host.
+    # Node sizes its heap from this limit: 1g gives a 524 MB heap, which a
+    # long-used account fills in normal operation, so garbage collection
+    # stalls requests for seconds. 1536m gives 792 MB. The support report and
+    # Admin > System status flag a heap below 700 MB. On a host with 2 GB or less, lower it with
+    # APP_MEMORY_LIMIT in .env; on a busy instance, raise it.
+    mem_limit: "${APP_MEMORY_LIMIT:-1536m}"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # The entrypoint applies migrations before the server listens. A
+      # migration that waits out a held lock retries for up to about eight
+      # minutes (docs/ops/deploy.md), and failed probes in that time must not
+      # read as a dead container. The first probe that answers still ends
+      # the start period, so a normal boot is healthy within 30 seconds of
+      # listening.
+      start_period: 10m
+
+  # Optional dedicated worker container — uncomment + set
+  # HEALTHLOG_PROCESS_TYPE=web on `app` to split the deployment.
+  # See docs/self-hosting/scaling.md for the full guide.
+  #
+  # app-worker:
+  #   image: ghcr.io/mbombeck/healthlog${HEALTHLOG_IMAGE_REF:-:latest}
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: healthlog-worker
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   cap_drop:
+  #     - ALL
+  #   environment:
+  #     <<: *healthlog_env
+  #     HEALTHLOG_PROCESS_TYPE: "worker"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   mem_limit: "${WORKER_MEMORY_LIMIT:-1536m}"
+
+  db:
+    # Pinned to the concrete minor instead of the floating `16-alpine`
+    # alias so a database update is always a deliberate, reviewable
+    # change (at pin time `16-alpine` resolved to this same digest, so
+    # existing deployments see no image change). Minor releases share
+    # the on-disk format — bumping this pin is safe without a dump /
+    # restore; a major-version bump (17+) is not.
+    #
+    # The pin only works as long as something watches it: PostgreSQL
+    # publishes minor releases with security and data-corruption fixes and
+    # recommends running the current one, and this line sat two minors
+    # behind for five weeks because the Dockerfile was the only thing
+    # Dependabot looked at. The `docker-compose` ecosystem in
+    # `.github/dependabot.yml` now raises a PR for each new minor;
+    # `src/__tests__/database-pin-is-watched.test.ts` keeps both halves
+    # (concrete pin, active watch) from being dropped.
+    image: postgres:16.15-alpine
+    container_name: healthlog-db
+    # Loads pg_stat_statements so slow queries can be found from measurements
+    # instead of guesses. Loading the library only collects statistics; the
+    # view appears after a one-time `CREATE EXTENSION pg_stat_statements;`
+    # (docs/ops/query-statistics.md). Changing this line restarts the
+    # database once on the next `compose up`.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=top
+    # Docker gives a container 64 MB of /dev/shm by default. Postgres keeps
+    # the shared memory of parallel queries and parallel maintenance there,
+    # and a larger plan fails with "could not resize shared memory segment".
+    shm_size: 256mb
+    # cap_drop: [ALL] is deliberately NOT applied here (unlike `app`): the
+    # official Postgres entrypoint starts as root, chowns the data
+    # directory, and drops privileges to the `postgres` user itself, which
+    # needs CAP_CHOWN/CAP_SETUID/CAP_SETGID to do. Dropping all capabilities
+    # makes that startup fail outright (verified locally — the container
+    # exits with "failed switching to 'postgres': operation not permitted").
+    # no-new-privileges still blocks privilege escalation beyond that.
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_USER: healthlog
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: healthlog
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthlog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # No `mem_limit` here, deliberately, and it is not an oversight. Bounding
+    # Postgres is the more dangerous half of the pair: an app container the
+    # kernel kills restarts clean, a database killed mid-write does not. With
+    # only `app` bounded the app is what gives way first under host pressure,
+    # which is the failure order we want. Raise APP_MEMORY_LIMIT before
+    # reaching for a limit here.
+    # Bounded log rotation, same reasoning as `app`: default json-file grows
+    # without bound and fills the disk on a small NAS/homelab host.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:
