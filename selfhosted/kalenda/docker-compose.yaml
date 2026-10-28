@@ -31,6 +31,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - FRONTEND_URL=http://backend:3000
       - PUPPETEER_URL=http://puppeteer:4000
+      - ALLOW_USER_REGISTRATION=false
     ports:
       - 3546:3000
     volumes:

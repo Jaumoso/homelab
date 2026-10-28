@@ -3,36 +3,6 @@
 name: dawarich
 networks:
   dawarich: null
-x-common-env-vars: &a1
-  RAILS_ENV: ${RAILS_ENV:-production}
-  REDIS_URL: redis://dawarich_redis:6379
-  DATABASE_HOST: dawarich_db
-  DATABASE_USERNAME: ${POSTGRES_USER}
-  DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
-  DATABASE_NAME: ${POSTGRES_DB}
-  APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab,192.168.1.20
-  APPLICATION_PROTOCOL: http
-  DISTANCE_UNIT: km
-  TIME_ZONE: Europe/Madrid
-  PROMETHEUS_EXPORTER_ENABLED: "false"
-  PROMETHEUS_EXPORTER_HOST: dawarich_app
-  PROMETHEUS_EXPORTER_PORT: 9394
-  SELF_HOSTED: "true"
-  STORE_GEODATA: "true"
-  GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
-  DOMAIN: dawarich.jaumoso.ovh
-  SMTP_SERVER: ${SMTP_SERVER}
-  SMTP_PORT: ${SMTP_PORT}
-  SMTP_USERNAME: ${SMTP_USERNAME}
-  SMTP_PASSWORD: ${SMTP_PASSWORD}
-  SMTP_FROM: ${SMTP_FROM}
-  SMTP_AUTHENTICATION: plain
-  SMTP_STARTTLS: "true"
-  SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-  WEB_CONCURRENCY: 1
-  BACKGROUND_PROCESSING_CONCURRENCY: 2
-#  PUID: "1000"
-#  PGID: "1000"
 
 services:
   dawarich_redis:
@@ -80,13 +50,9 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
-    #deploy:
-    #  resources:
-    #    limits:
-    #      cpus: ${DB_CPU_LIMIT:-0.75}
-    #      memory: ${DB_MEMORY_LIMIT:-1G}
     labels:
       - dockhand.update=false
+      
   dawarich_app:
     image: freikin/dawarich:latest
     container_name: dawarich_app
@@ -110,9 +76,37 @@ services:
       - "3000"
       - -b
       - "::"
-    restart: on-failure
+    restart: unless-stopped
+    stop_grace_period: 60s
     environment:
-      <<: *a1
+      RAILS_ENV: ${RAILS_ENV:-production}
+      REDIS_URL: redis://dawarich_redis:6379
+      DATABASE_HOST: dawarich_db
+      DATABASE_USERNAME: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_NAME: ${POSTGRES_DB}
+      APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab,192.168.1.20
+      APPLICATION_PROTOCOL: http
+      DISTANCE_UNIT: km
+      TIME_ZONE: Europe/Madrid
+      PROMETHEUS_EXPORTER_ENABLED: "false"
+      PROMETHEUS_EXPORTER_HOST: dawarich_app
+      PROMETHEUS_EXPORTER_PORT: 9394
+      SELF_HOSTED: "true"
+      STORE_GEODATA: "true"
+      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
+      DOMAIN: dawarich.jaumoso.ovh
+      SMTP_SERVER: ${SMTP_SERVER}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_AUTHENTICATION: plain
+      SMTP_STARTTLS: "true"
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      SIDEKIQ_EMBEDDED: 'true'
+      WEB_CONCURRENCY: '0'
+      BACKGROUND_PROCESSING_CONCURRENCY: ${BACKGROUND_PROCESSING_CONCURRENCY:-2}
       MIN_MINUTES_SPENT_IN_CITY: 60
     logging:
       driver: json-file
@@ -120,10 +114,7 @@ services:
         max-size: ${LOG_MAX_SIZE:-100m}
         max-file: ${LOG_MAX_FILE:-5}
     healthcheck:
-      test:
-        - CMD-SHELL
-        - wget -qO - http://127.0.0.1:3000/api/v1/health | grep -q
-          '"status"\s*:\s*"ok"'
+      test: [ "CMD-SHELL", "wget -qO - http://127.0.0.1:3000/api/v1/health | grep -q '\"status\"\\s*:\\s*\"ok\"'" ]
       interval: 10s
       retries: 30
       start_period: 30s
@@ -138,54 +129,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${APP_CPU_LIMIT:-0.50}
+          cpus: ${APP_CPU_LIMIT:-1.00}
           memory: ${APP_MEMORY_LIMIT:-4G}
-    labels:
-      - dockhand.update=false
-  dawarich_sidekiq:
-    image: freikin/dawarich:latest
-    container_name: dawarich_sidekiq
-    volumes:
-      - /mnt/externaldisk0/dawarich/dawarich_public:/var/app/public
-      - /mnt/externaldisk0/dawarich/dawarich_watched:/var/app/tmp/imports/watched
-      - /mnt/externaldisk0/dawarich/dawarich_storage:/var/app/storage
-    networks:
-      - dawarich
-    stdin_open: true
-    tty: true
-    entrypoint: sidekiq-entrypoint.sh
-    command:
-      - sidekiq
-    restart: on-failure
-    environment:
-      <<: *a1
-    logging:
-      driver: json-file
-      options:
-        max-size: ${LOG_MAX_SIZE:-100m}
-        max-file: ${LOG_MAX_FILE:-5}
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - pgrep -f sidekiq
-      interval: 10s
-      retries: 30
-      start_period: 30s
-      timeout: 10s
-    depends_on:
-      dawarich_db:
-        condition: service_healthy
-        restart: true
-      dawarich_redis:
-        condition: service_healthy
-        restart: true
-      dawarich_app:
-        condition: service_healthy
-        restart: true
-    #deploy:
-    #  resources:
-    #    limits:
-    #      cpus: ${SIDEKIQ_CPU_LIMIT:-0.50}
-    #      memory: ${SIDEKIQ_MEMORY_LIMIT:-2G}
     labels:
       - dockhand.update=false
