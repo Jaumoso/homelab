@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     ports:
-      - 3000:3000
+      - 3051:3000
     volumes:
       # Required for file uploads (e.g., airline icons)
       # The path to the right of the colon needs to match UPLOAD_LOCATION in your .env file
