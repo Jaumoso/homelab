@@ -1,0 +1,12 @@
+services:
+  ech0:
+    image: sn0wl1n/ech0:latest
+    container_name: ech0
+    ports:
+      - "6277:6277"
+    restart: unless-stopped
+    volumes:
+      - /mnt/externaldisk0/ech0/data:/app/data
+    environment:
+      - JWT_SECRET="${JWT_SECRET}"
+      

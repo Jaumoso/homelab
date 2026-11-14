@@ -6,7 +6,7 @@ networks:
 
 services:
   dawarich_redis:
-    image: redis:7.4-alpine
+    image: redis:8-alpine
     container_name: dawarich_redis
     command: |
       redis-server --save 900 1 --save 300 10 --appendonly no
@@ -64,7 +64,7 @@ services:
     networks:
       - dawarich
     ports:
-      - 6984:3000
+      - "${DAWARICH_APP_PORT:-3000}:3000"
       # - 9394:9394 # Prometheus exporter, uncomment if needed
     stdin_open: true
     tty: true
@@ -80,20 +80,24 @@ services:
     stop_grace_period: 60s
     environment:
       RAILS_ENV: ${RAILS_ENV:-production}
-      REDIS_URL: redis://dawarich_redis:6379
+      ### To run under a non-root user, set PUID/PGID here (do NOT use `user:`).
+      # PUID: ${PUID:-1000}
+      # PGID: ${PGID:-1000}
+      REDIS_URL: ${REDIS_URL:-redis://dawarich_redis:6379}
       DATABASE_HOST: dawarich_db
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USERNAME: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_NAME: ${POSTGRES_DB}
-      APPLICATION_HOSTS: localhost,dawarich.jaumoso.ovh,homelab,192.168.1.20
-      APPLICATION_PROTOCOL: http
-      DISTANCE_UNIT: km
-      TIME_ZONE: Europe/Madrid
-      PROMETHEUS_EXPORTER_ENABLED: "false"
+      APPLICATION_HOSTS: ${APPLICATION_HOSTS:-localhost,::1,127.0.0.1}
+      TIME_ZONE: ${TIME_ZONE:-Europe/London}
+      APPLICATION_PROTOCOL: ${APPLICATION_PROTOCOL:-http}
+      PROMETHEUS_EXPORTER_ENABLED: ${PROMETHEUS_EXPORTER_ENABLED:-false}
       PROMETHEUS_EXPORTER_HOST: dawarich_app
       PROMETHEUS_EXPORTER_PORT: 9394
-      SELF_HOSTED: "true"
-      STORE_GEODATA: "true"
+      DISTANCE_UNIT: km
+      SELF_HOSTED: ${SELF_HOSTED:-true}
+      STORE_GEODATA: ${STORE_GEODATA:-true}
       GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
       DOMAIN: dawarich.jaumoso.ovh
       SMTP_SERVER: ${SMTP_SERVER}
@@ -106,6 +110,7 @@ services:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       SIDEKIQ_EMBEDDED: 'true'
       WEB_CONCURRENCY: '0'
+      RAILS_LOG_TO_STDOUT: ${RAILS_LOG_TO_STDOUT:-true}
       BACKGROUND_PROCESSING_CONCURRENCY: ${BACKGROUND_PROCESSING_CONCURRENCY:-2}
       MIN_MINUTES_SPENT_IN_CITY: 60
     logging:

@@ -25,11 +25,11 @@ services:
     volumes:
       - /mnt/externaldisk0/beszel/beszel_agent_data:/var/lib/beszel-agent
       - /mnt/externaldisk0/beszel/beszel_socket:/beszel_socket
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro # systemd service monitoring
       - /var/run/systemd/private:/var/run/systemd/private:ro  # systemd service monitoring
     environment:
       LISTEN: /beszel_socket/beszel.sock
+      DOCKER_HOST: tcp://127.0.0.1:2375
       HUB_URL: http://localhost:8090
       TOKEN: ${TOKEN}
       KEY: "${KEY}"
